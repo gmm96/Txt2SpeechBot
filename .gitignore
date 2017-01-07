@@ -1,0 +1,7 @@
+*.*~
+*.pyc
+*.sh
+*.txt
+data
+plugins/*.pyc
+.idea/
