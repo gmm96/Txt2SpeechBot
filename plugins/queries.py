@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # @Author: gmm96
-# @Date:   2016-07-14 20:13:40
-# @Last Modified by:   gmm96
-# @Last Modified time: 2016-07-16 21:24:12
 
 import telebot              # API bot library
 from telebot import types   # API bot types

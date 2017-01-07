@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # @Author: gmm96
-# @Date:   2016-07-12 12:12:52
-# @Last Modified by:   Guille
-# @Last Modified time: 2016-09-01 03:27:22
 
 import MySQLdb
 from plugins.shared import *
