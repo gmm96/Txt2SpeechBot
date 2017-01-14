@@ -76,9 +76,8 @@ def query_help(q):
         url = 'http://translate.google.com/translate_tts?ie=UTF-8&total=1&idx=1&textlen=32&client=tw-ob&q=' + text + '&tl='
         cont = 1
         for key,val in LAN.items():
-            for l in val:
-                inline_results.append(types.InlineQueryResultVoice(str(cont),url+l[1], key+' '+l[0], reply_markup=markup))
-                cont += 1
+            inline_results.append(types.InlineQueryResultVoice(str(cont),url+val, key, reply_markup=markup))
+            cont += 1
 
 
 
@@ -98,7 +97,27 @@ def query_help(q):
     bot.answer_inline_query(q.id, inline_results, cache_time=1)
 
 
+
 #######
+
+
+
+@bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
+def test_chosen(chosen_inline_result):
+    if len(chosen_inline_result.query) > 0:
+        #bot.send_message('6216877', chosen_inline_result.result_id + chosen_inline_result.query)
+
+        lan = LAN.items()[int(chosen_inline_result.result_id)-1][1]
+        sql_read = "SELECT `%s` FROM chosen_results WHERE id = '%s'" % (lan, chosen_inline_result.from_user.id)
+        result = read_db(sql_read)
+        if result is not None:
+            times = result[0][0] + 1
+            sql_update = "UPDATE chosen_results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
+            update_db(sql_update)
+
+
+#######
+
 
 
 @bot.callback_query_handler(lambda call: True)
