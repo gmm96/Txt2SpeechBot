@@ -40,7 +40,7 @@ bot.set_update_listener(listener)
 ## Functions - Message handlers
 
 @bot.inline_handler(lambda query: 0 <= len(query.query) <= 201)
-def query_help(q):
+def query_handler(q):
     global QUERIES
     # Saving usefull data
     record_uid_queries(q)
@@ -75,9 +75,19 @@ def query_help(q):
     else:
         url = 'http://translate.google.com/translate_tts?ie=UTF-8&total=1&idx=1&textlen=32&client=tw-ob&q=' + text + '&tl='
         cont = 1
-        for key,val in LAN.items():
-            inline_results.append(types.InlineQueryResultVoice(str(cont),url+val, key, reply_markup=markup))
-            cont += 1
+
+        sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
+                   "`Ru-ru`,`Zh-cn`,`Ja` FROM chosen_results WHERE id = '%s'" % (q.from_user.id)
+        result = read_db(sql_read)
+        if result is not None:
+            sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
+            for i in range(len(sorted_languages)):
+                inline_results.append(types.InlineQueryResultVoice(str(cont), url + sorted_languages[i][1], sorted_languages[i][0], reply_markup=markup))
+                cont += 1
+        else:
+            for key, val in LAN.items():
+                inline_results.append(types.InlineQueryResultVoice(str(cont), url + val, key, reply_markup=markup))
+                cont += 1
 
 
 
@@ -107,11 +117,18 @@ def test_chosen(chosen_inline_result):
     if len(chosen_inline_result.query) > 0:
         #bot.send_message('6216877', chosen_inline_result.result_id + chosen_inline_result.query)
 
-        lan = LAN.items()[int(chosen_inline_result.result_id)-1][1]
-        sql_read = "SELECT `%s` FROM chosen_results WHERE id = '%s'" % (lan, chosen_inline_result.from_user.id)
+        #lan = LAN.items()[int(chosen_inline_result.result_id)-1][1]
+        sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
+                   "`Ru-ru`,`Zh-cn`,`Ja` FROM chosen_results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
         result = read_db(sql_read)
         if result is not None:
-            times = result[0][0] + 1
+            sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
+
+        #sql_read = "SELECT `%s` FROM chosen_results WHERE id = '%s'" % (lan, chosen_inline_result.from_user.id)
+        #result = read_db(sql_read)
+        #if result is not None:
+            times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
+            lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
             sql_update = "UPDATE chosen_results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
             update_db(sql_update)
 
