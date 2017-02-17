@@ -10,6 +10,7 @@ from plugins.file_processing import *
 from plugins.shared import *
 from plugins.db import *
 import time
+import re
 
 
 
@@ -24,7 +25,7 @@ def record_uid_messages(m):
     result = read_db(sql_read)
     if result is None:
         sql_insert_user_info = "INSERT INTO user_info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
-                      (m.from_user.id, m.from_user.username, m.from_user.first_name, m.from_user.last_name)
+                      (m.from_user.id, m.from_user.username, rm_special_char(m.from_user.first_name), rm_special_char(m.from_user.last_name))
         insert_db(sql_insert_user_info)
 
         sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (m.from_user.id)
@@ -35,7 +36,7 @@ def record_uid_messages(m):
                      result[3]==m.from_user.first_name and result[4]==m.from_user.last_name
         if not up_to_date:
             sql_update = "UPDATE user_info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
-                         (m.from_user.username, m.from_user.first_name, m.from_user.last_name, m.from_user.id)
+                         (m.from_user.username, rm_special_char(m.from_user.first_name), rm_special_char(m.from_user.last_name), m.from_user.id)
             update_db(sql_update)
 
 
@@ -70,7 +71,7 @@ def record_uid_queries(q):
     result = read_db(sql_read)
     if result is None:
         sql_insert = "INSERT INTO user_info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
-                      (q.from_user.id, q.from_user.username, q.from_user.first_name, q.from_user.last_name)
+                      (q.from_user.id, q.from_user.username, rm_special_char(q.from_user.first_name), rm_special_char(q.from_user.last_name))
         insert_db(sql_insert)
 
         sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (q.from_user.id)
@@ -81,7 +82,7 @@ def record_uid_queries(q):
                      result[3]==q.from_user.first_name and result[4]==q.from_user.last_name
         if not up_to_date:
             sql_update = "UPDATE user_info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
-                         (q.from_user.username, q.from_user.first_name, q.from_user.last_name, q.from_user.id)
+                         (q.from_user.username, rm_special_char(q.from_user.first_name), rm_special_char(q.from_user.last_name), q.from_user.id)
             update_db(sql_update)
 
 
@@ -110,6 +111,27 @@ def record_exception(em):
    with open('log.txt', 'a') as __log:
       __log.write(em + '\n')
 
+
+
+##
+## @brief  Removes emojis from string
+##
+## @param  string
+##
+
+def rm_special_char(string):
+    # emoji_pattern = re.compile("["
+    #                            u"\U0001F600-\U0001F64F"  # emoticons
+    #                            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+    #                            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+    #                            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    #                            "]+", flags=re.UNICODE)
+    # return emoji_pattern.sub(r'', text)  # no emoji
+
+    if string is not None:
+        return re.sub('[^A-Za-z0-9\s]+', '', string)
+    else:
+        return string
 
 ##
 ## @brief  Returns the username

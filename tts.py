@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: gmm96
  
-import telebot 
+import telebot
+import requests
 from telebot import types 
 import sys
 import pkgutil
@@ -168,4 +169,10 @@ def commands(m):
 
 ## Continue working even if there are errors
 #bot.skip_pending = True
-bot.polling(none_stop=True)
+#bot.polling(none_stop=True)
+while True:
+    try:
+        bot.polling(none_stop=True)
+    except requests.exceptions.ConnectionError as e:
+        print >> sys.stderr, str(e)
+        time.sleep(15)
