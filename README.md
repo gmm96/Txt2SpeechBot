@@ -45,6 +45,6 @@ They will appear every time you type the bot's name without any additional text.
 If you would want to add an audio to this menu, don't hesitate to contact me on telegram ([@supremoh](https://t.me/supremoh)).
 I will decide if it is suitable for the bot.
 
-<br><br>
+<br>
 
 - This bot collects some data for its proper operation. If you use it, you're accepting this fact.
