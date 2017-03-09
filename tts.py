@@ -80,7 +80,7 @@ def query_handler(q):
 
     # Regular audio
     else:
-        url = TTS_URL.format(query=text)
+        url = TTS.format(query=text)
         cont = 1
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
