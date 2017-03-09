@@ -22,7 +22,9 @@ This is to help you getting a better experience using the bot.
 
 ### Supported laguanges
 
-If you miss your local language and you want it to be added, feel free to contact me through telegram [@supremoh](https://t.me/supremoh)
+If you miss your local language and you want it to be added, feel free to contact me through telegram [@supremoh](https://t.me/supremoh).
+Right now, the supported languages are the next:
+
 * Arabic
 * German
 * English
