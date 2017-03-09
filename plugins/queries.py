@@ -14,14 +14,14 @@ import uuid
 
 
 def store_query(q):
-   global QUERIES
-   text = q.query
-   code_id = str(uuid.uuid4())
-   # bot.send_message(6216877, 'queries id: ' + code_id)
+    global QUERIES
+    text = q.query
+    code_id = str(uuid.uuid4())
+    # bot.send_message(6216877, 'queries id: ' + code_id)
 
-   if len(QUERIES) >= MAX_QUERIES:
-      QUERIES.pop(QUERIES.iterkeys().next())
+    if len(QUERIES) >= MAX_QUERIES:
+        QUERIES.pop(QUERIES.iterkeys().next())
 
-   QUERIES[code_id] = text
-   write_file('json', 'data/queries.json', QUERIES)
-   return code_id
+    QUERIES[code_id] = text
+    write_file('json', 'data/queries.json', QUERIES)
+    return code_id

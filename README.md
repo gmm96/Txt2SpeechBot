@@ -1,7 +1,5 @@
 # [@Txt2SpeechBot](https://t.me/Txt2SpeechBot)
 
-![@Txt2SpeechBot](`r https://raw.githubusercontent.com/gmm96/Txt2SpeechBot/master/text_to_speech.png`)
-
 Repository for the only Text to Speech Telegram Inline Bot.
 
 This inline bot ([@Txt2SpeechBot](https://t.me/Txt2SpeechBot)) translates your text messages into audios.
@@ -18,11 +16,14 @@ If you want to say "Hello" to somebody, you have to type...
 
 ... in any chat, choose the language and enjoy it :)
 
+Languages are shown in usage order. For example, if the most used language by you is the Spanish, it will be shown the first one.
+This is to help you getting a better experience using the bot.
+
 ### Predifined audios
 
 It also has some predifined audios made for fun.
 They will appear every time you type the bot's name without any additional text.
-If you would like an audio will be in this menu, don't hesitate to contact me on telegram ([@supremoh](https://t.me/supremoh)).
+If you would want to add an audio to this menu, don't hesitate to contact me on telegram ([@supremoh](https://t.me/supremoh)).
 I will decide if it is suitable for the bot.
 
 * This bot collects some data for its proper operation. If you use it, you're accepting this fact.

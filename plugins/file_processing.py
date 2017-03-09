@@ -4,6 +4,7 @@
 import json
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.getcwd()))
 
 
@@ -17,11 +18,11 @@ sys.path.append(os.path.dirname(os.getcwd()))
 ##
 
 def read_file(type, file_path):
-   with open(file_path) as __file:
-      if type == 'reg':
-         return __file.read()
-      elif type == 'json':
-         return json.load(__file)
+    with open(file_path) as __file:
+        if type == 'reg':
+            return __file.read()
+        elif type == 'json':
+            return json.load(__file)
 
 
 ##
@@ -33,8 +34,8 @@ def read_file(type, file_path):
 ##
 
 def write_file(type, file_path, info_to_save):
-   with open(file_path, 'w') as __file:
-      if type == 'reg':
-         __file.write(info_to_save)
-      elif type == 'json':
-         json.dump(info_to_save, __file)
+    with open(file_path, 'w') as __file:
+        if type == 'reg':
+            __file.write(info_to_save)
+        elif type == 'json':
+            json.dump(info_to_save, __file)
