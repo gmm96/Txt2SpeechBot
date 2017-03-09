@@ -29,7 +29,7 @@ sys.setdefaultencoding("utf-8")       #
 ##
 def listener(messages): 
     for m in messages:
-        record_uid_messages(m)   # Record user id
+        record_uid(m.from_user)   # Record user id
         record_log_messages(m)   # Log file
 
 
@@ -38,41 +38,47 @@ def listener(messages):
 bot.set_update_listener(listener)
 
 #################################################
-## Functions - Message handlers
+
+##
+## @brief  Inline message handler
+##
+## @param  q     query (inline message request)
+##
 
 @bot.inline_handler(lambda query: 0 <= len(query.query) <= 201)
 def query_handler(q):
     global QUERIES
-    # Saving usefull data
-    record_uid_queries(q)
+
+    # Saving useful data
+    record_uid(q.from_user)
     record_log_queries(q)
 
-    # Handling query
-    # text = urllib.quote(unicode(q.query).encode('utf8'))
-    
-    # text_words = q.query.split(' ')
-    # text = ''
-    # for word in text_words:
-    #     text += word + '+'
-    
+    # Parsing url
     text = q.query.replace(' ', '+')
 
+    # Query for callback
     code_id = store_query(q)
+
     # bot.send_message(6216877, 'query id: ' + code_id)
+
+    # Inline button
     b1 = types.InlineKeyboardButton("Text", callback_data=code_id)
     markup = types.InlineKeyboardMarkup()
     markup.add(b1)
     inline_results = []
 
+    # Predifined audio menu
     if "" == q.query or "menu" == q.query:
         cont = 1
         for txt,url in AUDIOS.items():
             inline_results.append(types.InlineQueryResultVoice(str(cont), url, txt.capitalize()))
             cont += 1
 
+    # Predifined audio selection
     elif q.query in AUDIOS:
         inline_results.append(types.InlineQueryResultVoice(str(1), AUDIOS[q.query], q.query.capitalize(), reply_markup=markup))
 
+    # Regular audio
     else:
         url = 'http://translate.google.com/translate_tts?ie=UTF-8&total=1&idx=1&textlen=32&client=tw-ob&q=' + text + '&tl='
         cont = 1
@@ -91,20 +97,6 @@ def query_handler(q):
                 cont += 1
 
 
-
-
-    # Prueba búsqueda nuevos enlaces/voces
-
-    """url = 'http://tts.imtranslator.net/ZPeA'
-    inline_results = []
-    cont=1
-    for key,val in LAN.items():
-        for l in val:
-            inline_results.append(types.InlineQueryResultVoice(str(cont), 
-                url, key+' '+l[0], reply_markup=markup))
-            cont+=1"""
-
-
     bot.answer_inline_query(q.id, inline_results, cache_time=1)
 
 
@@ -112,36 +104,39 @@ def query_handler(q):
 #######
 
 
+##
+## @brief  Save stats about chosen language
+##
+## @param  chosen_inline_result     chosen language
+##
 
 @bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
 def test_chosen(chosen_inline_result):
     if len(chosen_inline_result.query) > 0:
-        #bot.send_message('6216877', chosen_inline_result.result_id + chosen_inline_result.query)
 
-        #lan = LAN.items()[int(chosen_inline_result.result_id)-1][1]
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
                    "`Ru-ru`,`Zh-cn`,`Ja` FROM chosen_results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
         result = read_db(sql_read)
         if result is not None:
             sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
 
-        #sql_read = "SELECT `%s` FROM chosen_results WHERE id = '%s'" % (lan, chosen_inline_result.from_user.id)
-        #result = read_db(sql_read)
-        #if result is not None:
-            times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
-            lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
-            sql_update = "UPDATE chosen_results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
-            update_db(sql_update)
+        times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
+        lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
+        sql_update = "UPDATE chosen_results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
+        update_db(sql_update)
 
 
 #######
 
-
+##
+## @brief  Define callback button to show input text
+##
+## @param  c     callback
+##
 
 @bot.callback_query_handler(lambda call: True)
 def control_callback(c):
     global QUERIES
-    # bot.send_message(6216877, 'callback id: ' + c.data)
     try:
         text = QUERIES[c.data]
     except KeyError:
@@ -155,6 +150,11 @@ def control_callback(c):
 
 #######
 
+##
+## @brief  Regular message handler
+##
+## @param  m     message
+##
 
 @bot.message_handler(func=lambda msg:msg.text.encode("utf-8"))     # python 2
 # @bot.message_handler(content_types=['text'])                     # python 3

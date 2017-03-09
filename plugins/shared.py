@@ -10,16 +10,13 @@ import os
 import time
 
 
-
 ############## Creates bot object ###############
 TOKEN = read_file('reg', 'data/token.txt').rstrip()
 bot = telebot.TeleBot(TOKEN)
 
 ############### Global variables ################
-#USERS = read_file('json', 'data/users.json')
 DB = read_file('json', 'data/db.json')
 LAN = OrderedDict(sorted(read_file('json', 'data/languages.json').items(), key=itemgetter(0)))
-# CONT = int(read_file('reg', 'data/cont.txt').rstrip())
 
 try:
    file_path = 'data/queries.json'
@@ -32,6 +29,5 @@ except:
    os.system('echo "{}" > ' + file_path)
    bot.send_message(6216877, "Ya se ha vuelto a joder el puto json de las queries a " + real_time)
    QUERIES = OrderedDict()
-   
 
 MAX_QUERIES = 100000

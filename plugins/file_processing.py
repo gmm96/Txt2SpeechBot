@@ -3,7 +3,8 @@
 
 import json
 import sys
-sys.path.append("/home/gmm/telegramBots/Txt2SpeechBot/")
+import os
+sys.path.append(os.path.dirname(os.getcwd()))
 
 
 ##
@@ -20,15 +21,7 @@ def read_file(type, file_path):
       if type == 'reg':
          return __file.read()
       elif type == 'json':
-         # try:
          return json.load(__file)
-         # except ValueError:
-         #    file_backup = file_path[0:-5] + '_' + time.strftime("%d-%m-%y_%H:%M:%S") + '.json'
-         #    os.system("cp " + file_path + " " + file_backup)
-         #    os.system('echo "{}" > ' + file_path)
-         #    bot.send_message(6216877, "Ya se ha vuelto a joder el puto json de las queries.")
-         #    aux = {}
-         #    return aux
 
 
 ##

@@ -4,8 +4,9 @@
 
 import telebot              # API bot library
 from telebot import types   # API bot types
-import sys 
-sys.path.append("/home/gmm/telegramBots/Txt2SpeechBot/")
+import sys
+import os
+sys.path.append(os.path.dirname(os.getcwd()))
 from plugins.file_processing import *
 from plugins.shared import *
 from plugins.db import *
@@ -15,33 +16,33 @@ import re
 
 
 ##
-## @brief  Records id of users who message around the bot
+## @brief  Records id of users who use the bot
 ##
-## @param  m     message object
+## @param  user     user object
 ##
 
-def record_uid_messages(m):
-    sql_read = "SELECT * FROM user_info WHERE id = '%s'" % (m.from_user.id)
+def record_uid(user):
+    sql_read = "SELECT * FROM user_info WHERE id = '%s'" % (user.id)
     result = read_db(sql_read)
     if result is None:
         sql_insert_user_info = "INSERT INTO user_info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
-                      (m.from_user.id, m.from_user.username, rm_special_char(m.from_user.first_name), rm_special_char(m.from_user.last_name))
+                      (user.id, user.username, rm_special_char(user.first_name), rm_special_char(user.last_name))
         insert_db(sql_insert_user_info)
 
-        sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (m.from_user.id)
+        sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (user.id)
         insert_db(sql_insert_chosen_result)
     else:
         result = result[0]
-        up_to_date = result[1]==m.from_user.id and result[2]==m.from_user.username and \
-                     result[3]==m.from_user.first_name and result[4]==m.from_user.last_name
+        up_to_date = result[1]==user.id and result[2]==user.username and \
+                     result[3]==user.first_name and result[4]==user.last_name
         if not up_to_date:
             sql_update = "UPDATE user_info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
-                         (m.from_user.username, rm_special_char(m.from_user.first_name), rm_special_char(m.from_user.last_name), m.from_user.id)
+                         (user.username, rm_special_char(user.first_name), rm_special_char(user.last_name), user.id)
             update_db(sql_update)
 
 
 ##
-## @brief  Saves bot around activity in log file
+## @brief  Saves message activity in log file
 ##
 ## @param  m     message object
 ##
@@ -49,41 +50,14 @@ def record_uid_messages(m):
 def record_log_messages(m):
    if m.content_type == 'text':
       message = time.strftime("%d/%m/%y %H:%M:%S") + " | " 
-      if m.chat.id > 0:                                            # Conversación privada
+      if m.chat.id > 0:                                            # private chat
          message += str(user_name(m.from_user)) + " (" + str(m.chat.id) + "): " + m.text
-      else:                                                        # Grupos
+      else:                                                        # group chat
          message += user_name(m.from_user) + '(' + str(m.from_user.id) + ') in "' + m.chat.title + '"[' + str(m.chat.id) + ']: ' + m.text
 
       print(message)
       with open('log.txt', 'a') as __log:
          __log.write(message + "\n")
-
-
-
-##
-## @brief  Records id of users who query the bot
-##
-## @param  q     query object
-##
-
-def record_uid_queries(q):
-    sql_read = "SELECT * FROM user_info WHERE id = '%s'" % (q.from_user.id)
-    result = read_db(sql_read)
-    if result is None:
-        sql_insert = "INSERT INTO user_info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
-                      (q.from_user.id, q.from_user.username, rm_special_char(q.from_user.first_name), rm_special_char(q.from_user.last_name))
-        insert_db(sql_insert)
-
-        sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (q.from_user.id)
-        insert_db(sql_insert_chosen_result)
-    else:
-        result = result[0]
-        up_to_date = result[1]==q.from_user.id and result[2]==q.from_user.username and \
-                     result[3]==q.from_user.first_name and result[4]==q.from_user.last_name
-        if not up_to_date:
-            sql_update = "UPDATE user_info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
-                         (q.from_user.username, rm_special_char(q.from_user.first_name), rm_special_char(q.from_user.last_name), q.from_user.id)
-            update_db(sql_update)
 
 
 
@@ -102,6 +76,20 @@ def record_log_queries(q):
 
 
 ##
+## @brief  Removes emojis and special characters from string
+##
+## @param  string
+##
+
+def rm_special_char(string):
+    if string is not None:
+        return re.sub('[^A-Za-z0-9\s]+', '', string)
+    else:
+        return string
+
+
+
+##
 ## @brief  Records an exception in log file
 ##
 ## @param  em     exception message
@@ -112,26 +100,6 @@ def record_exception(em):
       __log.write(em + '\n')
 
 
-
-##
-## @brief  Removes emojis from string
-##
-## @param  string
-##
-
-def rm_special_char(string):
-    # emoji_pattern = re.compile("["
-    #                            u"\U0001F600-\U0001F64F"  # emoticons
-    #                            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    #                            u"\U0001F680-\U0001F6FF"  # transport & map symbols
-    #                            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    #                            "]+", flags=re.UNICODE)
-    # return emoji_pattern.sub(r'', text)  # no emoji
-
-    if string is not None:
-        return re.sub('[^A-Za-z0-9\s]+', '', string)
-    else:
-        return string
 
 ##
 ## @brief  Returns the username

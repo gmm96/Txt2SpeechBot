@@ -25,7 +25,7 @@ def read_db(query):
 
         return results
     except:
-        print "Error: unable to fecth data"
+        print("Error: unable to fecth data")
         return [[]]
 
     # disconnect from server
