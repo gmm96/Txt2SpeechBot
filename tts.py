@@ -80,7 +80,7 @@ def query_handler(q):
 
     # Regular audio
     else:
-        url = 'http://translate.google.com/translate_tts?ie=UTF-8&total=1&idx=1&textlen=32&client=tw-ob&q=' + text + '&tl='
+        url = TTS_URL.format(query=text)
         cont = 1
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
