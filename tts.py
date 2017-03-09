@@ -80,7 +80,7 @@ def query_handler(q):
 
     # Regular audio
     else:
-        url = TTS.format(query=text)
+        magic = TTS.format(query=text)
         cont = 1
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
@@ -89,11 +89,11 @@ def query_handler(q):
         if result is not None:
             sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
             for i in range(len(sorted_languages)):
-                inline_results.append(types.InlineQueryResultVoice(str(cont), url + sorted_languages[i][1], sorted_languages[i][0], reply_markup=markup))
+                inline_results.append(types.InlineQueryResultVoice(str(cont), magic + sorted_languages[i][1], sorted_languages[i][0], reply_markup=markup))
                 cont += 1
         else:
             for key, val in LAN.items():
-                inline_results.append(types.InlineQueryResultVoice(str(cont), url + val, key, reply_markup=markup))
+                inline_results.append(types.InlineQueryResultVoice(str(cont), magic + val, key, reply_markup=markup))
                 cont += 1
 
 
