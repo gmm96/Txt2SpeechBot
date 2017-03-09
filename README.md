@@ -1,6 +1,6 @@
 # [@Txt2SpeechBot](https://t.me/Txt2SpeechBot)
 
-![](`text_to_speech.png`)
+![@Txt2SpeechBot](`r https://raw.githubusercontent.com/gmm96/Txt2SpeechBot/master/text_to_speech.png`)
 
 Repository for the only Text to Speech Telegram Inline Bot.
 
