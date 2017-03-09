@@ -19,6 +19,23 @@ If you want to say "Hello" to somebody, you have to type...
 Languages are shown in usage order. For example, if the most used language by you is the Spanish, it will be shown the first one.
 This is to help you getting a better experience using the bot.
 
+
+### Supported laguanges
+
+If you miss your local language and you want it to be added, feel free to contact me through telegram [@supremoh](https://t.me/supremoh)
+* Arabic
+* German
+* English
+* Spanish
+* French
+* Italian
+* Portuguese
+* Greek
+* Russian
+* Turkish
+* Chinese
+* Japanese
+
 ### Predifined audios
 
 It also has some predifined audios made for fun.
