@@ -25,8 +25,9 @@ try:
 except:
    real_time = time.strftime("%d-%m-%y_%H:%M:%S")
    file_backup = file_path[0:-5] + '_' + real_time + '.json'
-   os.system("cp " + file_path + " " + file_backup)
-   os.system('echo "{}" > ' + file_path)
+   os.rename(file_path, file_backup)
+   with open(file_path, "w") as f:
+      f.write("{}")
    bot.send_message(6216877, "Ya se ha vuelto a joder el puto json de las queries a " + real_time)
    QUERIES = OrderedDict()
 
