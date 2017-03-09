@@ -1,5 +1,7 @@
 # [@Txt2SpeechBot](https://t.me/Txt2SpeechBot)
 
+![](`text_to_speech.png`)
+
 Repository for the only Text to Speech Telegram Inline Bot.
 
 This inline bot ([@Txt2SpeechBot](https://t.me/Txt2SpeechBot)) translates your text messages into audios.
