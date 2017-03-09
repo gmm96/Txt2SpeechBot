@@ -6,7 +6,7 @@ This inline bot ([@Txt2SpeechBot](https://t.me/Txt2SpeechBot)) translates your t
 It takes the audios from Goole Text To Speech API on a improved way to send them quickly, without downloading them in the VPS.
 For more details, you can see the source code.
 
-### Main use
+## Main use
 
 If you want to say "Hello" to somebody, you have to type...
 
@@ -20,7 +20,7 @@ Languages are shown in usage order. For example, if the most used language by yo
 This is to help you getting a better experience using the bot.
 
 
-### Supported laguanges
+#### Supported laguanges
 
 If you miss your local language and you want it to be added, feel free to contact me through telegram [@supremoh](https://t.me/supremoh).
 Right now, the supported languages are the next:
@@ -38,11 +38,13 @@ Right now, the supported languages are the next:
 * Chinese
 * Japanese
 
-### Predifined audios
+## Predifined audios
 
 It also has some predifined audios made for fun.
 They will appear every time you type the bot's name without any additional text.
 If you would want to add an audio to this menu, don't hesitate to contact me on telegram ([@supremoh](https://t.me/supremoh)).
 I will decide if it is suitable for the bot.
+
+<br><br>
 
 * This bot collects some data for its proper operation. If you use it, you're accepting this fact.
