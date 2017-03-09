@@ -17,8 +17,7 @@ bot = telebot.TeleBot(TOKEN)
 ############### Global variables ################
 DB = read_file('json', 'data/db.json')
 LAN = OrderedDict(sorted(read_file('json', 'data/languages.json').items(), key=itemgetter(0)))
-
-TTS_URL = 'http://translate.google.com/translate_tts?ie=UTF-8&total=1&idx=1&textlen=32&client=tw-ob&q={query}&tl='
+TTS_URL = read_file('reg', 'data/url.txt')
 
 try:
     file_path = 'data/queries.json'
