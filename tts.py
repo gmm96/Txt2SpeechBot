@@ -68,15 +68,13 @@ def query_handler(q):
     inline_results = []
 
     # Predifined audio menu
-    if "" == q.query or "menu" == q.query:
-        cont = 1
-        for txt,url in AUDIOS.items():
-            inline_results.append(types.InlineQueryResultVoice(str(cont), url, txt.capitalize()))
-            cont += 1
+    if "" == q.query:
+        for txt,url in AUDIO_URL.items():
+            inline_results.append(types.InlineQueryResultVoice(str(AUDIO_ID[txt]), url, txt.capitalize()))
 
     # Predifined audio selection
-    elif q.query in AUDIOS:
-        inline_results.append(types.InlineQueryResultVoice(str(1), AUDIOS[q.query], q.query.capitalize(), reply_markup=markup))
+    elif q.query in AUDIO_URL:
+        inline_results.append(types.InlineQueryResultVoice(str(1), AUDIO_URL[q.query], q.query.capitalize(), reply_markup=markup))
 
     # Regular audio
     else:
@@ -112,6 +110,9 @@ def query_handler(q):
 
 @bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
 def test_chosen(chosen_inline_result):
+    global AUDIO_CONT
+
+    # Regular audio
     if len(chosen_inline_result.query) > 0:
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
@@ -124,6 +125,11 @@ def test_chosen(chosen_inline_result):
         lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
         sql_update = "UPDATE chosen_results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
         update_db(sql_update)
+
+    # Predifined audio
+    else:
+        AUDIO_CONT[int(chosen_inline_result.result_id)] = AUDIO_CONT.get(int(chosen_inline_result.result_id), 0) + 1
+        write_file('json', 'data/audio_cont.json', AUDIO_CONT)
 
 
 #######
