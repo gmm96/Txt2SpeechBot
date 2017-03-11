@@ -18,11 +18,13 @@ bot = telebot.TeleBot(TOKEN)
 DB = read_file('json', 'data/db.json')
 LAN = OrderedDict(sorted(read_file('json', 'data/languages.json').items(), key=itemgetter(0)))
 TTS = read_file('reg', 'data/magic.txt')
+AUDIO_URL = OrderedDict(sorted(read_file('json', 'data/audio_url.json').items(), key=itemgetter(0)))
+AUDIO_ID = read_file('json', 'data/audio_id.json')
+AUDIO_CONT = read_file('json', 'data/audio_cont.json')
 
 try:
     file_path = 'data/queries.json'
     QUERIES = OrderedDict(read_file('json', file_path))
-    AUDIOS = OrderedDict(sorted(read_file('json', 'data/audios.json').items(), key=itemgetter(0)))
 except:
     real_time = time.strftime("%d-%m-%y_%H:%M:%S")
     file_backup = file_path[0:-5] + '_' + real_time + '.json'
