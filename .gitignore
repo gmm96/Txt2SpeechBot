@@ -6,3 +6,4 @@ data
 plugins/*.pyc
 .idea/
 .old
+text_to_speech.png
