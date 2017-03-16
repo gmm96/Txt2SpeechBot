@@ -119,7 +119,7 @@ def test_chosen(chosen_inline_result):
     global AUDIO_CONT
 
     # Regular audio
-    if len(chosen_inline_result.query) > 0:
+    if len(chosen_inline_result.query) > 0 and chosen_inline_result.query not in AUDIO_ID.keys():
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
                    "`Ru-ru`,`Tr-tr`,`Zh-cn`,`Ja` FROM chosen_results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
