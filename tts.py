@@ -80,7 +80,7 @@ def query_handler(q):
 
     # Predifined audio selection
     elif q.query in AUDIO_URL:
-        inline_results.append(types.InlineQueryResultVoice(str(1), AUDIO_URL[q.query], q.query.capitalize(), reply_markup=markup))
+        inline_results.append(types.InlineQueryResultVoice(str(AUDIO_ID[q.query]), AUDIO_URL[q.query], q.query.capitalize(), reply_markup=markup))
 
     # Regular audio
     else:
@@ -155,7 +155,7 @@ def control_callback(c):
         if audio_id.isdigit():
             audio_id = int(audio_id)
             if audio_id in AUDIO_ID_REVERSED:
-                text = AUDIO_ID_REVERSED[audio_id]
+                text = AUDIO_ID_REVERSED[audio_id].capitalize()
     if not text:
         try:
             text = QUERIES[c.data]
