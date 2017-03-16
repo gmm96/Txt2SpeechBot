@@ -13,7 +13,9 @@ from operator import itemgetter
 from plugins.file_processing import *
 from plugins.log import *
 from plugins.queries import *
-from plugins.shared import * 
+from plugins.shared import *
+
+CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS = "audio"
 
 reload(sys)                           # python 2
 sys.setdefaultencoding("utf-8")       #
@@ -70,7 +72,11 @@ def query_handler(q):
     # Predifined audio menu
     if "" == q.query:
         for txt,url in AUDIO_URL.items():
-            inline_results.append(types.InlineQueryResultVoice(str(AUDIO_ID[txt]), url, txt.capitalize()))
+            audio_id = AUDIO_ID[txt]
+            b1 = types.InlineKeyboardButton("Text", callback_data=CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS + str(audio_id))
+            markup = types.InlineKeyboardMarkup()
+            markup.add(b1)
+            inline_results.append(types.InlineQueryResultVoice(str(audio_id), url, txt.capitalize(), reply_markup=markup))
 
     # Predifined audio selection
     elif q.query in AUDIO_URL:
@@ -143,12 +149,20 @@ def test_chosen(chosen_inline_result):
 @bot.callback_query_handler(lambda call: True)
 def control_callback(c):
     global QUERIES
-    try:
-        text = QUERIES[c.data]
-    except KeyError:
-        text = ''
-    
-    if len(text) > 54:      
+    text = ''
+    if c.data.startswith(CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS):
+        audio_id = c.data[len(CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS):]
+        if audio_id.isdigit():
+            audio_id = int(audio_id)
+            if audio_id in AUDIO_ID_REVERSED:
+                text = AUDIO_ID_REVERSED[audio_id]
+    if not text:
+        try:
+            text = QUERIES[c.data]
+        except KeyError:
+            text = ''
+
+    if len(text) > 54:
         bot.answer_callback_query(c.id, text, show_alert=True)
     else:
         bot.answer_callback_query(c.id, text)
