@@ -111,7 +111,7 @@ def query_handler(q):
 ##
 ## @brief  Save stats about chosen language
 ##
-## @param  chosen_inline_result     chosen language
+## @param  chosen_inline_result     chosen language 
 ##
 
 @bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
