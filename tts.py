@@ -10,10 +10,12 @@ import importlib
 import urllib
 from collections import OrderedDict
 from operator import itemgetter
+from rfc3986 import normalize_uri
 from plugins.file_processing import *
 from plugins.log import *
 from plugins.queries import *
 from plugins.shared import *
+
 
 CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS = "audio"
 
@@ -56,7 +58,10 @@ def query_handler(q):
     record_log_queries(q)
 
     # Parsing url
-    text = q.query.replace(' ', '+')
+    if isArabic(q.query):
+        text = normalize_uri(q.query)
+    else:
+        text = q.query.replace(' ', '+')
 
     # Query for callback
     code_id = store_query(q)
