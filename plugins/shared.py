@@ -21,7 +21,7 @@ TTS = read_file('reg', 'data/magic.txt')
 AUDIO_URL = OrderedDict(sorted(read_file('json', 'data/audio_url.json').items(), key=itemgetter(0)))
 AUDIO_ID = read_file('json', 'data/audio_id.json')
 AUDIO_ID_REVERSED = dict(((v, k) for k, v in AUDIO_ID.items()))
-AUDIO_CONT = read_file('json', 'data/audio_cont.json')
+AUDIO_CONT = dict(read_file('pickle', 'data/audio_cont.pickle'))
 
 try:
     file_path = 'data/queries.json'
