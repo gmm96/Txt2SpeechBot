@@ -10,7 +10,8 @@ from plugins.file_processing import *
 from plugins.shared import *
 from collections import OrderedDict
 import uuid
-
+from alphabet_detector import AlphabetDetector
+from rfc3986 import normalize_uri
 
 
 def store_query(q):
@@ -25,3 +26,17 @@ def store_query(q):
     QUERIES[code_id] = text
     write_file('json', 'data/queries.json', QUERIES)
     return code_id
+
+
+
+def isArabic(string):
+    ad = AlphabetDetector()
+    return ad.only_alphabet_chars(unicode(string), 'ARABIC')
+
+
+
+def normalize_text(text):
+    if not isArabic(text):
+        return text.replace(' ', '+')
+    else:
+        return normalize_uri(text)
