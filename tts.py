@@ -23,6 +23,7 @@ reload(sys)                           # python 2
 sys.setdefaultencoding("utf-8")       #
 
 
+
 ##############################################
 ## Listener
 
@@ -57,7 +58,6 @@ def query_handler(q):
     record_uid(q.from_user)
     record_log_queries(q)
 
-    # Parsing url
     if isArabic(q.query):
         text = normalize_uri(q.query)
     else:
