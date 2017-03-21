@@ -12,6 +12,7 @@ from collections import OrderedDict
 import uuid
 from alphabet_detector import AlphabetDetector
 from rfc3986 import normalize_uri
+import string
 
 
 def store_query(q):
@@ -29,9 +30,13 @@ def store_query(q):
 
 
 
-def isArabic(string):
+def isArabic(s):
     ad = AlphabetDetector()
-    return ad.only_alphabet_chars(unicode(string), 'ARABIC')
+    string_without_numbers = str(s).translate(None, string.digits)
+    if string_without_numbers == '':
+        return False
+    else:
+        return ad.only_alphabet_chars(unicode(string_without_numbers), 'ARABIC')
 
 
 
