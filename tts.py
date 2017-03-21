@@ -96,14 +96,25 @@ def query_handler(q):
                    "`Ru-ru`,`Tr-tr`,`Zh-cn`,`Ja` FROM chosen_results WHERE id = '%s'" % (q.from_user.id)
         result = read_db(sql_read)
         if result is not None:
+            # array of (language_name, language_id, language_count)
             sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
-            for i in range(len(sorted_languages)):
-                inline_results.append(types.InlineQueryResultVoice(str(cont), magic + sorted_languages[i][1], sorted_languages[i][0], reply_markup=markup))
-                cont += 1
+            if not isArabic(q.query):
+                for i in range(len(sorted_languages)):
+                    inline_results.append(types.InlineQueryResultVoice(str(cont), magic + sorted_languages[i][1], sorted_languages[i][0], reply_markup=markup))
+                    cont += 1
+            else:
+                language_id = 0
+                for i in range(len(sorted_languages)):
+                    if 'Ar' in sorted_languages[i][1]:
+                        language_id = i
+                inline_results.append(types.InlineQueryResultVoice(str(language_id+1), magic + sorted_languages[language_id][1], sorted_languages[language_id][0], reply_markup=markup))
         else:
-            for key, val in LAN.items():
-                inline_results.append(types.InlineQueryResultVoice(str(cont), magic + val, key, reply_markup=markup))
-                cont += 1
+            if not isArabic(q.query):
+                for key, val in LAN.items():
+                    inline_results.append(types.InlineQueryResultVoice(str(cont), magic + val, key, reply_markup=markup))
+                    cont += 1
+            else:
+                inline_results.append(types.InlineQueryResultVoice(str(cont), magic + LAN.items()[0][1], LAN.items()[0][0], reply_markup=markup))
 
 
     bot.answer_inline_query(q.id, inline_results, cache_time=1)
