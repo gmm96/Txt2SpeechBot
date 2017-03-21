@@ -4,6 +4,7 @@
 import json
 import sys
 import os
+import cPickle as pickle
 
 sys.path.append(os.path.dirname(os.getcwd()))
 
@@ -18,11 +19,13 @@ sys.path.append(os.path.dirname(os.getcwd()))
 ##
 
 def read_file(type, file_path):
-    with open(file_path) as __file:
+    with open(file_path, 'r') as __file:
         if type == 'reg':
             return __file.read()
         elif type == 'json':
             return json.load(__file)
+        elif type == 'pickle':
+            return pickle.load(__file)
 
 
 ##
@@ -39,3 +42,5 @@ def write_file(type, file_path, info_to_save):
             __file.write(info_to_save)
         elif type == 'json':
             json.dump(info_to_save, __file)
+        elif type == 'pickle':
+            pickle.dump(info_to_save, __file)
