@@ -152,7 +152,6 @@ def test_chosen(chosen_inline_result):
     else:
         audio_id = int(chosen_inline_result.result_id)
         AUDIO_CONT[audio_id] = AUDIO_CONT.get(audio_id, 0) + 1
-        #bot.send_message(6216877, chosen_inline_result.result_id + str(type(audio_id)) + ' ' + str(AUDIO_CONT[audio_id]) + " " + str(type(int(chosen_inline_result.result_id))) + "\n" + str(AUDIO_CONT))
         write_file('pickle', 'data/audio_cont.pickle', AUDIO_CONT)
 
 
