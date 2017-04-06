@@ -25,8 +25,10 @@ def read_file(type, file_path):
         elif type == 'json':
             return json.load(__file)
         elif type == 'pickle':
-            return pickle.load(__file)
-
+            try:
+                return pickle.load(__file)
+            except EOFError:
+                return None
 
 ##
 ## @brief  Write some info in file
