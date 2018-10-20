@@ -3,7 +3,8 @@
 *.sh
 *.txt
 data
-plugins/*.pyc
+*.pyc
 .idea/
 .old
-text_to_speech.png
+count*
+*.bak
