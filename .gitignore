@@ -3,8 +3,6 @@
 *.sh
 *.txt
 data
-*.pyc
+plugins/*.pyc
 .idea/
 .old
-count*
-*.bak
