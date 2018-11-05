@@ -22,22 +22,23 @@ import re
 ##
 
 def record_uid(user):
-    sql_read = "SELECT * FROM user_info WHERE id = '%s'" % (user.id)
+    sql_read = "SELECT * FROM User_Info WHERE id = '%s'" % (user.id)
+
     result = read_db(sql_read)
     if result is None:
-        sql_insert_user_info = "INSERT INTO user_info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
+        sql_insert_user_info = "INSERT INTO User_Info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
                                (user.id, user.username, rm_special_char(user.first_name),
                                 rm_special_char(user.last_name))
         insert_db(sql_insert_user_info)
 
-        sql_insert_chosen_result = "INSERT INTO chosen_results(id) VALUES('%s')" % (user.id)
+        sql_insert_chosen_result = "INSERT INTO Lan_Results(id) VALUES('%s')" % (user.id)
         insert_db(sql_insert_chosen_result)
     else:
         result = result[0]
         up_to_date = result[1] == user.id and result[2] == user.username and \
                      result[3] == user.first_name and result[4] == user.last_name
         if not up_to_date:
-            sql_update = "UPDATE user_info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
+            sql_update = "UPDATE User_Info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
                          (user.username, rm_special_char(user.first_name), rm_special_char(user.last_name), user.id)
             update_db(sql_update)
 
