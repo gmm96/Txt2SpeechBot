@@ -26,6 +26,7 @@ AUDIO_ID_REVERSED = dict(((v, k) for k, v in AUDIO_ID.items()))
 AUDIO_CONT = dict(read_file('pickle', 'data/audio_cont.pickle'))
 AUDIO_CONT.update({k: 0 for k in list( set( AUDIO_ID.values()) - set(AUDIO_CONT.keys() ) )})
 
+user_focus_on = {}
 
 
 try:

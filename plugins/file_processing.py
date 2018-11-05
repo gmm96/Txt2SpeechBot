@@ -28,7 +28,9 @@ def read_file(type, file_path):
             try:
                 return pickle.load(__file)
             except EOFError:
-                return None
+                return {}
+
+
 
 ##
 ## @brief  Write some info in file
