@@ -33,7 +33,7 @@ def read_db(query):
 
 
 
-def insert_db(query):
+def write_db(query):
     global DB
     # Open database connection
     db = MySQLdb.connect(DB[0], DB[1], DB[2], DB[3])
@@ -52,26 +52,3 @@ def insert_db(query):
 
     # disconnect from server
     db.close()
-
-
-
-def update_db(query):
-    global DB
-    # Open database connection
-    db = MySQLdb.connect(DB[0], DB[1], DB[2], DB[3])
-
-    # prepare a cursor object using cursor() method
-    cursor = db.cursor()
-
-    try:
-        # Execute the SQL command
-        cursor.execute(query)
-        # Commit your changes in the database
-        db.commit()
-    except:
-        # Rollback in case there is any error
-        db.rollback()
-
-    # disconnect from server
-    db.close()
-
