@@ -49,13 +49,14 @@ CREATE TABLE `Lan_Results` (
 
 CREATE TABLE `Own_Audios` (
   `row_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'Row number',
-  `filename` varchar(300) NOT NULL COMMENT 'Filename of the audio',
+  `file_id` varchar(300) NOT NULL COMMENT 'Telegram file id',
   `id` varchar(15) NOT NULL COMMENT 'User id',
   `description` varchar(30) NOT NULL COMMENT 'Short description of the audio',
   `duration` int(11) NOT NULL COMMENT 'Audio duration in seconds',
   `size` int(11) NOT NULL COMMENT 'File size in bytes',
+  `type` varchar(10) NOT NULL COMMENT 'Telegram file type',
   `times_used` int(11) NOT NULL DEFAULT 0 COMMENT 'Times that audio has been used by user',
-  PRIMARY KEY(`id`, `filename`),
+  PRIMARY KEY(`id`, `file_id`),
   UNIQUE KEY `row_id`(`row_id`),
   FOREIGN KEY(`id`) REFERENCES `User_Info`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Stores the information of own user audios';
