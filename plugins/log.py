@@ -29,10 +29,10 @@ def record_uid(user):
         sql_insert_user_info = "INSERT INTO User_Info(id, username, first_name, last_name) VALUES ('%s', '%s', '%s', '%s')" % \
                                (user.id, user.username, rm_special_char(user.first_name),
                                 rm_special_char(user.last_name))
-        insert_db(sql_insert_user_info)
+        write_db(sql_insert_user_info)
 
         sql_insert_chosen_result = "INSERT INTO Lan_Results(id) VALUES('%s')" % (user.id)
-        insert_db(sql_insert_chosen_result)
+        write_db(sql_insert_chosen_result)
     else:
         result = result[0]
         up_to_date = result[1] == user.id and result[2] == user.username and \
@@ -40,7 +40,7 @@ def record_uid(user):
         if not up_to_date:
             sql_update = "UPDATE User_Info SET username='%s', first_name='%s', last_name='%s' WHERE id = '%s'" % \
                          (user.username, rm_special_char(user.first_name), rm_special_char(user.last_name), user.id)
-            update_db(sql_update)
+            write_db(sql_update)
 
 
 ##

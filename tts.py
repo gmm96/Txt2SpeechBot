@@ -16,7 +16,9 @@ from plugins.file_processing import *
 from plugins.log import *
 from plugins.queries import *
 from plugins.shared import *
+from plugins.db import *
 import subprocess
+import os
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, ID3NoHeaderError, COMM
 
@@ -84,16 +86,22 @@ def query_handler(q):
 
     # Predifined audio menu
     if "" == q.query:
-        for txt,url in AUDIO_URL.items():
-            audio_id = AUDIO_ID[txt]
-            b1 = types.InlineKeyboardButton("Text", callback_data=CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS + str(audio_id))
-            markup = types.InlineKeyboardMarkup()
-            markup.add(b1)
-            inline_results.append(types.InlineQueryResultVoice(str(audio_id), url, txt.capitalize(), reply_markup=markup))
-
-    # Predifined audio selection
-    #elif q.query in AUDIO_URL:
-    #    inline_results.append(types.InlineQueryResultVoice(str(AUDIO_ID[q.query]), AUDIO_URL[q.query], q.query.capitalize(), reply_markup=markup))
+    #    for txt,url in AUDIO_URL.items():
+    #        audio_id = AUDIO_ID[txt]
+    #        b1 = types.InlineKeyboardButton("Text", callback_data=CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS + str(audio_id))
+    #        markup = types.InlineKeyboardMarkup()
+    #        markup.add(b1)
+    #        inline_results.append(types.InlineQueryResultVoice(str(audio_id), url, txt.capitalize(), reply_markup=markup))
+        sql_read = "SELECT `file_id`, `description`, `type` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
+        result = read_db(sql_read)
+        if result is not None:
+            count = 1
+            for audio in result:
+                if audio[2] == 'voice':
+                    inline_results.append(types.InlineQueryResultCachedVoice(str(count), audio[0], audio[1], reply_markup=markup))
+                else:
+                    inline_results.append(types.InlineQueryResultCachedAudio(str(count), audio[0], reply_markup=markup))
+                count += 1
 
     # Regular audio
     else:
@@ -158,8 +166,7 @@ def test_chosen(chosen_inline_result):
         times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
         lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
         sql_update = "UPDATE Lan_Results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
-
-        update_db(sql_update)
+        write_db(sql_update)
 
     # Predifined audio
     else:
@@ -237,65 +244,50 @@ def user_audio_list(user_id):
 
 @bot.message_handler(commands=['addaudio'])
 def add_audio_start(m):
-    #sql_statement = "SELECT COUNT(`filename`) FROM Own_Audios WHERE id='%s'" % (m.from_user.id)
-    #result = read_db(sql_statement)
-    #if result is None or len(result) < 20:
-
-    if len(user_audio_list(m.from_user.id)) < 20:
-        next_step(m, "Send audio or voice note.\n\t- Format: telegram voice note (.ogg) or .mp3\n\t- Size limit: 128Kb", add_audio_file)
-    else:
-        bot.reply_to(m, "Maximum number of audio files reached!")
+    next_step(m, "Send audio or voice note.", add_audio_file)
 
 
 def add_audio_file(m):
     global user_focus_on
     if m.content_type == 'audio' or m.content_type == 'voice':
-
-        file_link = m.audio if m.content_type == 'audio' else m.voice
-        bot.send_message(m.from_user.id, str(file_link.file_size) + file_link.mime_type + str(file_link.duration))
-        allowed_mime_types = ["audio/mpeg", "audio/ogg", "audio/x-opus+ogg"]
-        if file_link.file_size <= 524288 and file_link.mime_type in allowed_mime_types:
-
-            file_info = bot.get_file(file_link.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-            dir_path = "audios/" + str(m.from_user.id) + "/"
-            filename = str(file_link.file_id) + ".ogg"
-            if not os.path.exists(dir_path):
-                os.mkdir(dir_path)
-
-            try:
-                with open(dir_path + filename, 'wb') as new_file:
-                    new_file.write(downloaded_file)
-                    if file_link.mime_type == 'audio/mpeg':
-                        subprocess.call("mp3_to_ogg.sh " + dir_path + filename, shell=True)
-                    bot.reply_to(m, "Saved!")
-                    user_focus_on[m.from_user.id] = filename
-                    next_step(m, "Provide now a short description for the audio. 30 character allowed.", add_audio_description)
-            except EnvironmentError:
-                next_step(m, "Error writing audio. Send it again.", add_audio_file)
-
-        else:
-            next_step(m, "Audio file size exceed limit. Limit is 128Kb. Try with other audio.", add_audio_file)
+        user_focus_on[m.from_user.id] = m
+        next_step(m, "Saved!\n\nProvide now a short description for the audio. 30 character allowed.", add_audio_description)
     else:
-        next_step(m, "Audio file are not detected. Are you sure you've uploaded the correct file? Try it again.", add_audio_file)
+        bot_reply(m, "Audio file are not detected. Are you sure you've uploaded the correct file? Try it again with /addaudio command.")
 
 
 def add_audio_description(m):
     global user_focus_on
     if m.content_type == 'text' and len(m.text) <= 30:
-        filename = 'audios/' + str(m.from_user.id) + '/' + user_focus_on[m.from_user.id]
-        #file_size = os.path.getsize(filename)
-        #duration = int(subprocess.check_output('bash get_duration.sh %s' % (filename), shell=True).rstrip())
-        #sql_statement = "INSERT INTO Own_Audios(filename, id, description, duration, size) VALUES ('%s', '%s', '%s', '%i', '%i')" % \
-        #                (user_focus_on[m.from_user.id], str(m.from_user.id), m.text, duration, file_size)
-        #insert_db(sql_statement)
-        try:
-            tags = ID3(filename)
-        except ID3NoHeaderError:
-            tags = ID3()
-        tags["COMM"] = COMM(encoding=3, lang=u'eng', desc='desc', text=m.text.decode('utf-8'))
-        tags.save(filename)
-        bot.reply_to(m, "Saved audio with description: " + m.text)
+        sql_read = "SELECT `file_id` FROM Own_Audios WHERE id='%s' AND description='%s'" % (str(m.from_user.id), m.text.strip())
+        result = read_db(sql_read)
+        if result is None:
+            file_message = user_focus_on[m.from_user.id]
+
+            #Workaround to set audio title
+            if file_message.content_type == 'audio':
+                file_link = file_message.audio
+                file_info = bot.get_file(file_link.file_id)
+                downloaded_file = bot.download_file(file_info.file_path)
+                filename = 'audios/' + str(file_link.file_id) + ".mp3"
+                try:
+                    with open(filename, 'wb') as new_file:
+                        new_file.write(downloaded_file)
+                except EnvironmentError:
+                    next_step(m, "Error writing audio. Send it again.", add_audio_file)
+                title = m.text.strip().encode("utf-8")
+                message = bot.send_audio(6216877, open('audios/' + str(file_link.file_id) + '.mp3', 'rb'), title=title)
+                os.remove('audios/' + str(file_link.file_id) + '.mp3')
+                user_focus_on[m.from_user.id] = file_message = message
+
+            file_link = file_message.audio if file_message.content_type == 'audio' else file_message.voice
+            file_type = 'audio' if file_message.content_type == 'audio' else 'voice'
+            sql_insert = "INSERT INTO Own_Audios(file_id, id, description, duration, size, type) VALUES ('%s', '%s', '%s', '%i', '%i', '%s')" % \
+                            (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size, file_type)
+            write_db(sql_insert)
+            bot.reply_to(m, 'Saved audio with description: "' + m.text + '"')
+        else:
+            next_step(m, "Description is already in use. Please, write another one.", add_audio_description)
     else:
         next_step(m, "Wrong input. Write a short description to save the audio. 30 characters maximum.", add_audio_description)
 
@@ -309,29 +301,15 @@ def add_audio_description(m):
 
 @bot.message_handler(commands=['listaudio'])
 def list_audio(m):
-    #sql_statement = "SELECT `filename`, `description`, `duration`, `size` FROM Own_Audios WHERE id='%s'" % (m.from_user.id)
-    #result = read_db(sql_statement)
-    #if result is not None and len(result) > 0:
-    #    message = "These are your uploaded audios:\n"
-    #    for audio in result:
-    #        message += "%i.-\t %s \t-\t %s:%s s,\t %.2f KB\n" % (, audio[1], minutes, seconds, audio_size)
-
-    audios = user_audio_list(m.from_user.id)
-    if len(audios) != 0:
-        message = "These are your uploaded audios:\n"
-        count = 0
-        audio_list = {}
-        for audio in audios:
-            audio_list[count] = audio
-            tags = ID3(user_dir + audio)
-            audio_comment = tags[u'COMM:desc:eng'].text[0].encode('utf-8')
-            audio_length = subprocess.check_output("ffmpeg -i " + user_dir + audio + " 2>&1 | grep Duration | awk '{print $2}' | tr -d ,", shell=True).decode('utf-8').rstrip().split(':')
-            minutes, seconds = audio_length[0], audio_length[1]
-            audio_size = os.path.getsize(user_dir + audio) / 1024.0
-            message += "%i.-\t %s \t-\t %s:%s s,\t %.2f KB\n" % (count, audio_comment, minutes, seconds, audio_size)
+    sql_statement = "SELECT `file_id`, `description`, `duration`, `size` FROM Own_Audios WHERE id='%s'" % (m.from_user.id)
+    result = read_db(sql_statement)
+    if result is not None:
+        message = "These are your uploaded audios.\n\n"
+        count = 1
+        for audio in result:
+            message += "%i.-  %s \t|\t %ss \t|\t %.2fKB\n" % (count, audio[1], audio[2], audio[3]/1024.0)
             count += 1
         bot.reply_to(m, message)
-        return audio_list
     else:
         bot.reply_to(m, "Sorry, you don't have any uploaded audio... Try to upload one with /addaudio command.")
 
@@ -345,18 +323,27 @@ def list_audio(m):
 
 @bot.message_handler(commands=['rmaudio'])
 def rm_audio_start(m):
-    audios = user_audio_list(m.from_user.id)
-    if len(audios) != 0:
-        audio_list = list_audio(m)
-        next_step(m, "Send the digit of the audio you want to remove.", rm_audio_select)
-    else:
-        bot.reply_to(m, "Sorry, you don't have uploaded any audio. Try it with /addaudio command.")
+    list_audio(m)
+    sql_statement = "SELECT `file_id`, `description` FROM Own_Audios WHERE id='%s'" % (m.from_user.id)
+    result = read_db(sql_statement)
+    if result is not None:
+        next_step(m, "Send the description of the audio you want to remove.", rm_audio_select)
 
 
 
 def rm_audio_select(m):
-    if m.content_type != 'text' and m.text.isdigit() and int(m.text):
-        m = m.text
+    if m.content_type == 'text':
+        rm_audio_description = m.text.strip()
+        sql_read = "SELECT `file_id` FROM Own_Audios WHERE id='%s' AND description='%s'" % (m.from_user.id, rm_audio_description)
+        result = read_db(sql_read)
+        if result is not None:
+            sql_rm = "DELETE FROM Own_Audios WHERE id='%s' AND description='%s'" % (m.from_user.id, rm_audio_description)
+            write_db(sql_rm)
+            bot.reply_to(m, "The file was deleted from your audios.")
+        else:
+            next_step(m, "No audio with the provided description. Please, send the correct description.", rm_audio_select)
+    else:
+        next_step(m, "Wrong input. Send the description of the audio you want to remove.", rm_audio_select)
 
 
 #######
@@ -367,7 +354,7 @@ def rm_audio_select(m):
 ## @param  m     message
 ##
 
-@bot.message_handler(func=lambda message: True, content_types=['text'])     # python 2
+@bot.message_handler(commands=['help'])     # python 2
 # @bot.message_handler(content_types=['text'])                     # python 3
 def commands(m):
     message = read_file('reg', 'data/message.txt')
