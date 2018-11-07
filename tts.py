@@ -84,23 +84,14 @@ def query_handler(q):
     # bot.send_message(6216877, text)
 
 
-    # Predifined audio menu
+    # Own audio menu
     if "" == q.query:
-    #    for txt,url in AUDIO_URL.items():
-    #        audio_id = AUDIO_ID[txt]
-    #        b1 = types.InlineKeyboardButton("Text", callback_data=CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS + str(audio_id))
-    #        markup = types.InlineKeyboardMarkup()
-    #        markup.add(b1)
-    #        inline_results.append(types.InlineQueryResultVoice(str(audio_id), url, txt.capitalize(), reply_markup=markup))
-        sql_read = "SELECT `file_id`, `description`, `type` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
+        sql_read = "SELECT `file_id`, `description` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
         result = read_db(sql_read)
         if result is not None:
             count = 1
             for audio in result:
-                if audio[2] == 'voice':
-                    inline_results.append(types.InlineQueryResultCachedVoice(str(count), audio[0], audio[1], reply_markup=markup))
-                else:
-                    inline_results.append(types.InlineQueryResultCachedAudio(str(count), audio[0], reply_markup=markup))
+                inline_results.append(types.InlineQueryResultCachedVoice(str(count), audio[0], audio[1], reply_markup=markup))
                 count += 1
 
     # Regular audio
@@ -253,7 +244,7 @@ def add_audio_file(m):
         user_focus_on[m.from_user.id] = m
         next_step(m, "Saved!\n\nProvide now a short description for the audio. 30 character allowed.", add_audio_description)
     else:
-        bot_reply(m, "Audio file are not detected. Are you sure you've uploaded the correct file? Try it again with /addaudio command.")
+        bot.reply_to(m, "Audio file are not detected. Are you sure you've uploaded the correct file? Try it again with /addaudio command.")
 
 
 def add_audio_description(m):
@@ -275,15 +266,14 @@ def add_audio_description(m):
                         new_file.write(downloaded_file)
                 except EnvironmentError:
                     next_step(m, "Error writing audio. Send it again.", add_audio_file)
-                title = m.text.strip().encode("utf-8")
-                message = bot.send_audio(6216877, open('audios/' + str(file_link.file_id) + '.mp3', 'rb'), title=title)
-                os.remove('audios/' + str(file_link.file_id) + '.mp3')
+                subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
+                message = bot.send_voice(6216877, open('audios/' + str(file_link.file_id) + '.ogg', 'rb'))
+                os.remove('audios/' + str(file_link.file_id) + '.ogg')
                 user_focus_on[m.from_user.id] = file_message = message
 
-            file_link = file_message.audio if file_message.content_type == 'audio' else file_message.voice
-            file_type = 'audio' if file_message.content_type == 'audio' else 'voice'
-            sql_insert = "INSERT INTO Own_Audios(file_id, id, description, duration, size, type) VALUES ('%s', '%s', '%s', '%i', '%i', '%s')" % \
-                            (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size, file_type)
+            file_link = file_message.voice
+            sql_insert = "INSERT INTO Own_Audios(file_id, id, description, duration, size) VALUES ('%s', '%s', '%s', '%i', '%i')" % \
+                            (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size)
             write_db(sql_insert)
             bot.reply_to(m, 'Saved audio with description: "' + m.text + '"')
         else:
@@ -341,9 +331,9 @@ def rm_audio_select(m):
             write_db(sql_rm)
             bot.reply_to(m, "The file was deleted from your audios.")
         else:
-            next_step(m, "No audio with the provided description. Please, send the correct description.", rm_audio_select)
+            bot.reply_to(m, "No audio with the provided description. Please, send the correct description. Try again /rmaudio.")
     else:
-        next_step(m, "Wrong input. Send the description of the audio you want to remove.", rm_audio_select)
+        bot.reply_to(m, "Wrong input. Send the description of the audio you want to remove. Try again /rmaudio.")
 
 
 #######

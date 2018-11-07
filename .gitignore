@@ -5,4 +5,5 @@
 data
 plugins/*.pyc
 .idea/
-.old
+.
+count*.py

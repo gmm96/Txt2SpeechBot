@@ -54,7 +54,6 @@ CREATE TABLE `Own_Audios` (
   `description` varchar(30) NOT NULL COMMENT 'Short description of the audio',
   `duration` int(11) NOT NULL COMMENT 'Audio duration in seconds',
   `size` int(11) NOT NULL COMMENT 'File size in bytes',
-  `type` varchar(10) NOT NULL COMMENT 'Telegram file type',
   `times_used` int(11) NOT NULL DEFAULT 0 COMMENT 'Times that audio has been used by user',
   PRIMARY KEY(`id`, `file_id`),
   UNIQUE KEY `row_id`(`row_id`),
