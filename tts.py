@@ -59,43 +59,39 @@ bot.set_update_listener(listener)
 @bot.inline_handler(lambda query: 0 <= len(query.query) <= 201)
 def query_handler(q):
     global QUERIES
+    inline_results = []
 
     # Saving useful data
     record_uid(q.from_user)
     record_log_queries(q)
 
-    q.query = q.query.replace("\n", " ")
-    text = normalize_uri(q.query) if isArabic(q.query) else q.query.replace(' ', '+')
-
-    # Query for callback
-    code_id = store_query(q)
-
-    # bot.send_message(6216877, 'query id: ' + code_id)
-
-    # Inline button
-    b1 = types.InlineKeyboardButton("Text", callback_data=code_id)
-    markup = types.InlineKeyboardMarkup()
-    markup.add(b1)
-    inline_results = []
-
-    # text = urllib2.quote(text.encode('UTF-8'))
-    # bot.send_message(6216877, text)
-    # text = text.replace('%2B', '+')
-    # bot.send_message(6216877, text)
-
-
-    # Own audio menu
+    # Personal audio
     if "" == q.query:
         sql_read = "SELECT `file_id`, `description` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
         result = read_db(sql_read)
         if result is not None:
             count = 1
             for audio in result:
+                markup = types.InlineKeyboardMarkup()
+                markup.add(types.InlineKeyboardButton("Description", callback_data=audio[0]))
                 inline_results.append(types.InlineQueryResultCachedVoice(str(count), audio[0], audio[1], reply_markup=markup))
                 count += 1
 
-    # Regular audio
+    # TTS audio
     else:
+        # text = urllib2.quote(text.encode('UTF-8'))
+        # bot.send_message(6216877, text)
+        # text = text.replace('%2B', '+')
+        # bot.send_message(6216877, text)
+
+        q.query = q.query.replace("\n", " ")
+        text = normalize_uri(q.query) if isArabic(q.query) else q.query.replace(' ', '+')
+
+        # Inline button
+        code_id = store_query(q)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("Text", callback_data=code_id))
+
         magic = TTS.format(query=text)
         cont = 1
 
@@ -145,7 +141,7 @@ def query_handler(q):
 def test_chosen(chosen_inline_result):
     global AUDIO_CONT
 
-    # Regular audio
+    # TTS audio
     if len(chosen_inline_result.query) > 0 and chosen_inline_result.query not in AUDIO_ID.keys():
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
@@ -159,11 +155,12 @@ def test_chosen(chosen_inline_result):
         sql_update = "UPDATE Lan_Results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
         write_db(sql_update)
 
-    # Predifined audio
-    else:
-        audio_id = int(chosen_inline_result.result_id)
-        AUDIO_CONT[audio_id] = AUDIO_CONT.get(audio_id, 0) + 1
-        write_file('pickle', 'data/audio_cont.pickle', AUDIO_CONT)
+    # Personal audio
+    #else:
+    #    bot.send_message(6216877, str(chosen_inline_result.inline_message_id.voice))
+    #    audio_id = int(chosen_inline_result.result_id)
+    #    AUDIO_CONT[audio_id] = AUDIO_CONT.get(audio_id, 0) + 1
+    #    write_file('pickle', 'data/audio_cont.pickle', AUDIO_CONT)
 
 
 #######
@@ -177,14 +174,11 @@ def test_chosen(chosen_inline_result):
 @bot.callback_query_handler(lambda call: True)
 def control_callback(c):
     global QUERIES
-    text = ''
-    if c.data.startswith(CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS):
-        audio_id = c.data[len(CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS):]
-        if audio_id.isdigit():
-            audio_id = int(audio_id)
-            if audio_id in AUDIO_ID_REVERSED:
-                text = AUDIO_ID_REVERSED[audio_id].capitalize()
-    if not text:
+    sql_read = "SELECT `description` FROM Own_Audios WHERE file_id='%s'" % (c.data)
+    result = read_db(sql_read)
+    if result is not None:
+        text = result[0][0]
+    else:
         try:
             text = QUERIES[c.data]
         except KeyError:
@@ -235,8 +229,12 @@ def user_audio_list(user_id):
 
 @bot.message_handler(commands=['addaudio'])
 def add_audio_start(m):
-    next_step(m, "Send audio or voice note.", add_audio_file)
-
+    sql_read = "SELECT COUNT(`file_id`) FROM Own_Audios WHERE id='%s'" % (str(m.from_user.id))
+    result = read_db(sql_read)
+    if result is not None and int(result[0][0]) < 50:
+        next_step(m, "Send audio or voice note.", add_audio_file)
+    else:
+        bot.reply_to(m, "Sorry, you reached maximun number of stored audios (50). Try removing with /rmaudio command.")
 
 def add_audio_file(m):
     global user_focus_on
@@ -255,7 +253,7 @@ def add_audio_description(m):
         if result is None:
             file_message = user_focus_on[m.from_user.id]
 
-            #Workaround to set audio title
+            # Workaround to change audio to voice note
             if file_message.content_type == 'audio':
                 file_link = file_message.audio
                 file_info = bot.get_file(file_link.file_id)
@@ -334,6 +332,7 @@ def rm_audio_select(m):
             bot.reply_to(m, "No audio with the provided description. Please, send the correct description. Try again /rmaudio.")
     else:
         bot.reply_to(m, "Wrong input. Send the description of the audio you want to remove. Try again /rmaudio.")
+
 
 
 #######
