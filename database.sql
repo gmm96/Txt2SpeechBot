@@ -1,7 +1,6 @@
 --
 -- Structure for table `User_Info`
 --
-
 CREATE TABLE `User_Info` (
   `row_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'Row number',
   `id` varchar(15) NOT NULL COMMENT 'User id',
@@ -17,7 +16,6 @@ CREATE TABLE `User_Info` (
 --
 -- Structure for table `Lan_Results`
 --
-
 CREATE TABLE `Lan_Results` (
   `row_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'Row number',
   `id` varchar(15) NOT NULL COMMENT 'User id',
@@ -46,7 +44,6 @@ CREATE TABLE `Lan_Results` (
 --
 -- Structure for table `Own_Audios`
 --
-
 CREATE TABLE `Own_Audios` (
   `row_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'Row number',
   `file_id` varchar(300) NOT NULL COMMENT 'Telegram file id',
@@ -54,6 +51,7 @@ CREATE TABLE `Own_Audios` (
   `description` varchar(30) NOT NULL COMMENT 'Short description of the audio',
   `duration` int(11) NOT NULL COMMENT 'Audio duration in seconds',
   `size` int(11) NOT NULL COMMENT 'File size in bytes',
+  `user_audio_id` int(11) NOT NULL COMMENT 'User audio identification',
   `times_used` int(11) NOT NULL DEFAULT 0 COMMENT 'Times that audio has been used by user',
   PRIMARY KEY(`id`, `file_id`),
   UNIQUE KEY `row_id`(`row_id`),
