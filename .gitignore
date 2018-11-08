@@ -1,6 +1,6 @@
 *.*~
 *.pyc
-*.sh
+notify_failure.sh
 *.txt
 data
 plugins/*.pyc
