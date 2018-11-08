@@ -23,8 +23,6 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, ID3NoHeaderError, COMM
 
 
-CALLBACK_DATA_PREFIX_FOR_PREDEFINED_AUDIOS = "audio"
-
 reload(sys)                           # python 2
 sys.setdefaultencoding("utf-8")       #
 
@@ -67,15 +65,13 @@ def query_handler(q):
 
     # Personal audio
     if "" == q.query:
-        sql_read = "SELECT `file_id`, `description` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
+        sql_read = "SELECT `file_id`, `description`, `user_audio_id` FROM Own_Audios WHERE id='%s'" % (str(q.from_user.id))
         result = read_db(sql_read)
         if result is not None:
-            count = 1
             for audio in result:
                 markup = types.InlineKeyboardMarkup()
                 markup.add(types.InlineKeyboardButton("Description", callback_data=audio[0]))
-                inline_results.append(types.InlineQueryResultCachedVoice(str(count), audio[0], audio[1], reply_markup=markup))
-                count += 1
+                inline_results.append(types.InlineQueryResultCachedVoice(str(audio[2]), audio[0], audio[1], reply_markup=markup))
 
     # TTS audio
     else:
@@ -142,7 +138,7 @@ def test_chosen(chosen_inline_result):
     global AUDIO_CONT
 
     # TTS audio
-    if len(chosen_inline_result.query) > 0 and chosen_inline_result.query not in AUDIO_ID.keys():
+    if len(chosen_inline_result.query) > 0:
 
         sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
                    "`Ru-ru`,`Tr-tr`,`Zh-cn`,`Ja`, `Pl` FROM Lan_Results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
@@ -156,11 +152,14 @@ def test_chosen(chosen_inline_result):
         write_db(sql_update)
 
     # Personal audio
-    #else:
-    #    bot.send_message(6216877, str(chosen_inline_result.inline_message_id.voice))
-    #    audio_id = int(chosen_inline_result.result_id)
-    #    AUDIO_CONT[audio_id] = AUDIO_CONT.get(audio_id, 0) + 1
-    #    write_file('pickle', 'data/audio_cont.pickle', AUDIO_CONT)
+    else:
+        sql_read = "SELECT `file_id`, `times_used` FROM Own_Audios WHERE id='%s' AND user_audio_id='%i'" % \
+                   (str(chosen_inline_result.from_user.id), int(chosen_inline_result.result_id))
+        result = read_db(sql_read)
+        if result is not None:
+            sql_update = "UPDATE Own_Audios SET `times_used`='%i' WHERE file_id='%s'" % (result[0][1]+1, result[0][0])
+            write_db(sql_update)
+
 
 
 #######
@@ -222,6 +221,23 @@ def user_audio_list(user_id):
 
 
 ##
+## @brief  Return a list of free user audio ids based on taken ids.
+##
+## @param  taken_ids      List of ids (int)
+##
+
+
+def get_free_user_audio_id(taken_ids):
+    free_ids = range(1,51)
+    for id in taken_ids:
+        free_ids.remove(id)
+    free_ids.sort()
+    return free_ids[0]
+
+
+
+
+##
 ## @brief  Set of functions for the /addaudio command. Asks user for audio and stores it.
 ##
 ## @param  m   message
@@ -235,6 +251,7 @@ def add_audio_start(m):
         next_step(m, "Send audio or voice note.", add_audio_file)
     else:
         bot.reply_to(m, "Sorry, you reached maximun number of stored audios (50). Try removing with /rmaudio command.")
+
 
 def add_audio_file(m):
     global user_focus_on
@@ -270,8 +287,16 @@ def add_audio_description(m):
                 user_focus_on[m.from_user.id] = file_message = message
 
             file_link = file_message.voice
-            sql_insert = "INSERT INTO Own_Audios(file_id, id, description, duration, size) VALUES ('%s', '%s', '%s', '%i', '%i')" % \
-                            (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size)
+            sql_statement = "SELECT `user_audio_id` FROM Own_Audios WHERE id='%s'" % (str(m.from_user.id))
+            dbreturn = read_db(sql_statement)
+            if dbreturn is not None:
+                taken_ids = [audio_id[0] for audio_id in dbreturn]
+                user_audio_id = get_free_user_audio_id(taken_ids)
+            else:
+                user_audio_id = 1
+
+            sql_insert = "INSERT INTO Own_Audios(file_id, id, description, duration, size, user_audio_id) VALUES ('%s', '%s', '%s', '%i', '%i', '%i')" % \
+                            (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size, user_audio_id)
             write_db(sql_insert)
             bot.reply_to(m, 'Saved audio with description: "' + m.text + '"')
         else:
@@ -316,7 +341,6 @@ def rm_audio_start(m):
     result = read_db(sql_statement)
     if result is not None:
         next_step(m, "Send the description of the audio you want to remove.", rm_audio_select)
-
 
 
 def rm_audio_select(m):
