@@ -18,16 +18,7 @@ bot = telebot.TeleBot(TOKEN)
 DB = read_file('json', 'data/db.json')
 LAN = OrderedDict(sorted(read_file('json', 'data/languages.json').items(), key=itemgetter(0)))
 TTS = read_file('reg', 'data/magic.txt')
-AUDIO_URL = OrderedDict(sorted(read_file('json', 'data/audio_url.json').items(), key=itemgetter(0)))
-AUDIO_ID = read_file('json', 'data/audio_id.json')
-AUDIO_ID_REVERSED = dict(((v, k) for k, v in AUDIO_ID.items()))
-
-
-AUDIO_CONT = dict(read_file('pickle', 'data/audio_cont.pickle'))
-AUDIO_CONT.update({k: 0 for k in list( set( AUDIO_ID.values()) - set(AUDIO_CONT.keys() ) )})
-
 user_focus_on = {}
-
 
 try:
     file_path = 'data/queries.json'
