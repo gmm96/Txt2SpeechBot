@@ -6,8 +6,6 @@ import telebot
 import requests
 from telebot import types 
 import sys
-import pkgutil
-import importlib
 import urllib2
 from collections import OrderedDict
 from operator import itemgetter
@@ -18,10 +16,6 @@ from plugins.queries import *
 from plugins.shared import *
 from plugins.db import *
 import subprocess
-import os
-from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, ID3NoHeaderError, COMM
-
 
 reload(sys)                           # python 2
 sys.setdefaultencoding("utf-8")       #
@@ -80,6 +74,7 @@ def query_handler(q):
         # text = text.replace('%2B', '+')
         # bot.send_message(6216877, text)
 
+        # normalize query
         q.query = q.query.replace("\n", " ")
         text = normalize_uri(q.query) if isArabic(q.query) else q.query.replace(' ', '+')
 
@@ -137,28 +132,27 @@ def query_handler(q):
 def test_chosen(chosen_inline_result):
     global AUDIO_CONT
 
-    # TTS audio
-    if len(chosen_inline_result.query) > 0:
-
-        sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
-                   "`Ru-ru`,`Tr-tr`,`Zh-cn`,`Ja`, `Pl` FROM Lan_Results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
-        result = read_db(sql_read)
-        if result is not None:
-            sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
-
-        times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
-        lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
-        sql_update = "UPDATE Lan_Results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
-        write_db(sql_update)
-
     # Personal audio
-    else:
+    if len(chosen_inline_result.query) == 0:
+
         sql_read = "SELECT `file_id`, `times_used` FROM Own_Audios WHERE id='%s' AND user_audio_id='%i'" % \
                    (str(chosen_inline_result.from_user.id), int(chosen_inline_result.result_id))
         result = read_db(sql_read)
         if result is not None:
             sql_update = "UPDATE Own_Audios SET `times_used`='%i' WHERE file_id='%s'" % (result[0][1]+1, result[0][0])
             write_db(sql_update)
+
+    # TTS audio
+    else:
+        sql_read = "SELECT `Ar`,`De-de`,`En-uk`,`En-us`,`Es-es`,`Es-mx`,`Fr-fr`,`It-it`,`Pt-pt`,`El-gr`," + \
+                   "`Ru-ru`,`Tr-tr`,`Zh-cn`,`Ja`, `Pl` FROM Lan_Results WHERE id = '%s'" % (chosen_inline_result.from_user.id)
+        result = read_db(sql_read)
+        if result is not None:
+            sorted_languages = sorted([(LAN.items()[i][0], LAN.items()[i][1], result[0][i]) for i in range(len(LAN))], key=itemgetter(2), reverse=True)
+        times = sorted_languages[int(chosen_inline_result.result_id)-1][2] + 1
+        lan = sorted_languages[int(chosen_inline_result.result_id)-1][1]
+        sql_update = "UPDATE Lan_Results SET `%s`='%d' WHERE id = '%s'" % (lan, times, chosen_inline_result.from_user.id)
+        write_db(sql_update)
 
 
 
@@ -175,9 +169,10 @@ def control_callback(c):
     global QUERIES
     sql_read = "SELECT `description` FROM Own_Audios WHERE file_id='%s'" % (c.data)
     result = read_db(sql_read)
-    if result is not None:
+
+    if result is not None:      # Personal audio
         text = result[0][0]
-    else:
+    else:                       # TTS audio
         try:
             text = QUERIES[c.data]
         except KeyError:
@@ -191,7 +186,9 @@ def control_callback(c):
 
 
 
-#######
+##############################################
+
+
 
 ##
 ## @brief  Defines next procedure of a step by step process.
@@ -225,7 +222,6 @@ def user_audio_list(user_id):
 ##
 ## @param  taken_ids      List of ids (int)
 ##
-
 
 def get_free_user_audio_id(taken_ids):
     free_ids = range(1,51)

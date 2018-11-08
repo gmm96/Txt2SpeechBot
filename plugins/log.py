@@ -6,7 +6,6 @@ import telebot  # API bot library
 from telebot import types  # API bot types
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.getcwd()))
 from plugins.file_processing import *
 from plugins.shared import *
