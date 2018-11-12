@@ -266,20 +266,24 @@ def add_audio_description(m):
         if result is None:
             file_message = user_focus_on[m.from_user.id]
 
+            # bot.send_message(6216877, str(file_message))
+
             # Workaround to change audio to voice note
             if file_message.content_type == 'audio':
                 file_link = file_message.audio
                 file_info = bot.get_file(file_link.file_id)
                 downloaded_file = bot.download_file(file_info.file_path)
-                filename = 'audios/' + str(file_link.file_id) + ".mp3"
+                filename = 'audios/' + str(file_link.file_id)
                 try:
                     with open(filename, 'wb') as new_file:
                         new_file.write(downloaded_file)
                 except EnvironmentError:
                     next_step(m, "Error writing audio. Send it again.", add_audio_file)
-                subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
-                message = bot.send_voice(6216877, open('audios/' + str(file_link.file_id) + '.ogg', 'rb'))
-                os.remove('audios/' + str(file_link.file_id) + '.ogg')
+                if file_message.audio.mime_type == 'audio/mpeg' or 'audio/mp3':
+                    bot.send_message(6216877, "Pasando a ogg")
+                    subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
+                message = bot.send_voice(6216877, open(filename, 'rb'))
+                os.remove(filename)
                 user_focus_on[m.from_user.id] = file_message = message
 
             file_link = file_message.voice
