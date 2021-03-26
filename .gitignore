@@ -1,9 +1,9 @@
 *.*~
 *.pyc
-notify_failure.sh
+*.iml
 *.txt
-data
-plugins/*.pyc
+data/
+models/__pycache__/
 .idea/
-.
-count*.py
+.handler-saves/
+notify_failure.sh
