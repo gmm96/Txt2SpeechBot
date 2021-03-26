@@ -105,7 +105,7 @@ def add_audio_file( m: types.Message ) -> None:
 def add_audio_description( m: types.Message ) -> None:
     db_conn = tts.create_db_conn()
     if m.content_type == 'text' and len( m.text ) <= 30:
-        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), m.text.strip()) )
+        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), tts.db_str(m.text.strip()) ) )
         if result is None:
             file_message = tts.next_step_focused[ str(m.from_user.id) ]
 
@@ -137,7 +137,7 @@ def add_audio_description( m: types.Message ) -> None:
             else:
                 user_audio_id = 1
             callback_code = tts.generate_callback_code_for_own_audios()
-            db_conn.write_all( Constants.DBStatements.DB_AUDIO_INSERT % (file_link.file_id, str(m.from_user.id), m.text.strip(), file_link.duration, file_link.file_size, user_audio_id, callback_code) )
+            db_conn.write_all( Constants.DBStatements.DB_AUDIO_INSERT % (file_link.file_id, str(m.from_user.id), tts.db_str(m.text.strip()), file_link.duration, file_link.file_size, user_audio_id, callback_code) )
             tts.bot.reply_to( m, 'Saved audio with description: "' + m.text + '"' )
         else:
             next_step( m, "Description is already in use. Please, write another one.", add_audio_description )
@@ -167,9 +167,9 @@ def rm_audio_start ( m: types.Message ) -> None:
 def rm_audio_select ( m: types.Message ) -> None:
     if m.content_type == 'text':
         db_conn = tts.create_db_conn()
-        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), m.text.strip( )) )
+        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), tts.db_str(m.text.strip())) )
         if result is not None:
-            db_conn.write_all( Constants.DBStatements.DB_AUDIO_REMOVE % (str(m.from_user.id), m.text.strip( )) )
+            db_conn.write_all( Constants.DBStatements.DB_AUDIO_REMOVE % (str(m.from_user.id), tts.db_str(m.text.strip())) )
             tts.bot.reply_to( m, "The file was deleted from your audios." )
         else:
             tts.bot.reply_to( m, "No audio with the provided description. Please, send the correct description. Try again /rmaudio." )
