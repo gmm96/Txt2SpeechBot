@@ -104,8 +104,9 @@ def add_audio_file( m: types.Message ) -> None:
 
 def add_audio_description( m: types.Message ) -> None:
     db_conn = tts.create_db_conn()
-    if m.content_type == 'text' and len( m.text ) <= 30:
-        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), tts.db_str(m.text.strip()) ) )
+    description = tts.db_str(m.text.strip())
+    if m.content_type == 'text' and len( description ) <= 30:
+        result = db_conn.read_one( Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), description) )
         if result is None:
             file_message = tts.next_step_focused[ str(m.from_user.id) ]
 
@@ -137,8 +138,8 @@ def add_audio_description( m: types.Message ) -> None:
             else:
                 user_audio_id = 1
             callback_code = tts.generate_callback_code_for_own_audios()
-            db_conn.write_all( Constants.DBStatements.DB_AUDIO_INSERT % (file_link.file_id, str(m.from_user.id), tts.db_str(m.text.strip()), file_link.duration, file_link.file_size, user_audio_id, callback_code) )
-            tts.bot.reply_to( m, 'Saved audio with description: "' + m.text + '"' )
+            db_conn.write_all( Constants.DBStatements.DB_AUDIO_INSERT % (file_link.file_id, str(m.from_user.id), description, file_link.duration, file_link.file_size, user_audio_id, callback_code) )
+            tts.bot.reply_to( m, 'Saved audio with description: "' + description + '"' )
         else:
             next_step( m, "Description is already in use. Please, write another one.", add_audio_description )
     else:
