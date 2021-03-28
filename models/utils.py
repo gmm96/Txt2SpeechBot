@@ -59,11 +59,11 @@ class Utils:
             else:
                 text = str(message.from_user.username) + '(' + str( message.from_user.id ) + ') in "' + message.chat.title + '"[' + str(
                     message.chat.id ) + ']: ' + message.text
-            Constants.MSG_LOG.logger.info( datetime.datetime.now( ).strftime( "%d/%m/%y %H:%M:%S:%f" ) + " | " + text )
+            Constants.MSG_LOG.logger.info( text )
 
     def record_query ( self, query: types.InlineQuery ) -> None:
         text = str( query.from_user.username ) + " (" + str( query.from_user.id ) + "): " + query.query
-        Constants.QRY_LOG.logger.info( datetime.datetime.now( ).strftime( "%d/%m/%y %H:%M:%S:%f" ) + " | " + text )
+        Constants.QRY_LOG.logger.info( text )
 
     def create_db_conn(self):
         return Database(Constants.DB_CREDENTIALS[0], Constants.DB_CREDENTIALS[1], Constants.DB_CREDENTIALS[2], Constants.DB_CREDENTIALS[3])

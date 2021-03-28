@@ -4,10 +4,10 @@
 import logging
 import os
 import sys
+from models.logger_formatter import CustomFormatter
 
 
 class Logger:
-    FORMATTER = logging.Formatter( '%(asctime)s \t|\t %(levelname)s \t|\t %(message)s\n' )
     BASE_PATH = os.getcwd( ) + "/"
 
     def __init__ ( self, name: str, file: str, level: int = logging.INFO ):
@@ -15,7 +15,7 @@ class Logger:
         self.name = name
         self.level = level
         self.handler = logging.FileHandler( self.filename )
-        self.handler.setFormatter( Logger.FORMATTER )
+        self.handler.setFormatter( CustomFormatter() )
         self.logger = logging.getLogger( self.name )
         self.logger.setLevel( self.level )
         self.logger.addHandler( self.handler )
