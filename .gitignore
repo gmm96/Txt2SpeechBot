@@ -3,6 +3,7 @@
 *.iml
 *.txt
 data/
+analyze/
 models/__pycache__/
 .idea/
 .handler-saves/
