@@ -12,6 +12,7 @@ class LiteralConstants:
     class FileType(enum.Enum):
         REG = 1
         JSON = 2
+        BYTES = 3
 
     class ChatType:
         PRIVATE: str = "private"
@@ -46,6 +47,7 @@ class LiteralConstants:
         STA_LOG: str = "data/status.log"
         MSG_LOG: str = "data/messages.log"
         QRY_LOG: str = "data/queries.log"
+        AUDIOS: str = "audios/"
 
     class ExceptionMessages:
         DB_CONNECTED: str = "DB | Connected to MySQL database server, version "
