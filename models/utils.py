@@ -234,3 +234,26 @@ class Utils:
                 message += "%i.-  %s \t|\t %i s \t|\t %.2fKB\n" % (count, audio[1], audio[2], audio[3] / 1024.0)
                 count += 1
             return message
+
+    @staticmethod
+    def is_file_voice(msg: types.Message) -> bool:
+        return msg.content_type == 'voice'
+
+    @staticmethod
+    def is_document_media_file(msg: types.Message) -> bool:
+        if msg.content_type == 'document':
+            file_type = msg.document.mime_type.split('/')[0]
+            if file_type in Constants.CONTENT_TYPE:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    @staticmethod
+    def is_file_media(msg: types.Message) -> bool:
+        return msg.content_type in Constants.CONTENT_TYPE or Utils.is_document_media_file(msg)
+
+    @staticmethod
+    def should_convert_to_voice(msg: types.Message) -> bool:
+        return msg.content_type == 'audio' or msg.content_type == 'video' or Utils.is_document_media_file(msg)
