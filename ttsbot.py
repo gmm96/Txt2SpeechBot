@@ -11,6 +11,7 @@ from typing import List, Callable, Dict
 from collections import OrderedDict
 from models.constants import Constants
 from models.utils import Utils
+from models.fileProcessing import FileProcessing
 
 
 my_bot = telebot.TeleBot(Constants.TOKEN)
@@ -39,6 +40,27 @@ class Text_To_Speech_Bot(Utils):
         reply = self.bot.reply_to(input_message, text_to_send, reply_markup=types.ForceReply(selective=False))
         self.bot.register_next_step_handler(reply, function)
 
+    def convert_audio_to_voice(self, desc_msg: types.Message, file_msg: types.Message) -> types.Message:
+        file_link = file_msg.audio
+        downloaded_file = self.bot.download_file(self.bot.get_file(file_link.file_id).file_path)
+
+        if file_msg.audio.mime_type == 'audio/mpeg' or 'audio/mp3':
+            filename = Constants.FilePath.AUDIOS + str(file_link.file_id)
+            audio_file = FileProcessing(filename, Constants.FileType.BYTES)
+            is_file_saved = audio_file.write_file(downloaded_file)
+            if not is_file_saved:
+                self.next_step(desc_msg, "Error writing audio. Send it again.", add_audio_file)
+
+            self.bot.send_message(6216877, "Pasando a ogg")
+            subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
+            new_msg = self.bot.send_voice(6216877, audio_file.read_file())
+            os.remove(filename)
+        else:
+            #self.bot.send_message(6216877, "Unknown format")
+            new_msg = self.bot.send_voice(6216877, downloaded_file)
+        self.next_step_focused[str(desc_msg.from_user.id)] = file_msg = new_msg
+        return file_msg
+
 
 tts = Text_To_Speech_Bot(my_bot)
 
@@ -59,9 +81,9 @@ def query_handler(q: types.InlineQuery) -> None:
         inline_results = tts.create_inline_results_tts_audio(q, tts.queries, db_conn)
     try:
         tts.bot.answer_inline_query(q.id, inline_results, cache_time=1)
-    except Exception as e:
-        Constants.STA_LOG.logger.exception('Query: "' + q.query + '"\n', exc_info=True)
-        tts.bot.send_message(6216877, 'Query: "' + q.query + '"\n' + str(e))
+    except Exception as query_exc:
+        Constants.STA_LOG.logger.exception('Query: "' + q.query + '"', exc_info=True)
+        tts.bot.send_message(6216877, 'Query: "' + q.query + '"\n' + str(query_exc))
 
 
 @my_bot.chosen_inline_handler(func=lambda chosen_inline_result: True)
@@ -108,26 +130,9 @@ def add_audio_description(m: types.Message) -> None:
         result = db_conn.read_one(Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), description))
         if result is None:
             file_message = tts.next_step_focused[str(m.from_user.id)]
-
             # tts.bot.send_message(6216877, str(file_message))
-
-            # Workaround to change audio to voice note
             if file_message.content_type == 'audio':
-                file_link = file_message.audio
-                file_info = tts.bot.get_file(file_link.file_id)
-                downloaded_file = tts.bot.download_file(file_info.file_path)
-                filename = 'audios/' + str(file_link.file_id)
-                try:
-                    with open(filename, 'wb') as new_file:
-                        new_file.write(downloaded_file)
-                except EnvironmentError:
-                    tts.next_step(m, "Error writing audio. Send it again.", add_audio_file)
-                if file_message.audio.mime_type == 'audio/mpeg' or 'audio/mp3':
-                    tts.bot.send_message(6216877, "Pasando a ogg")
-                    subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
-                message = tts.bot.send_voice(6216877, open(filename, 'rb'))
-                os.remove(filename)
-                tts.next_step_focused[str(m.from_user.id)] = file_message = message
+                file_message = tts.convert_audio_to_voice(m, file_message)
 
             file_link = file_message.voice
             dbreturn = db_conn.read_all(Constants.DBStatements.DB_AUDIO_READ_USER_IDS % str(m.from_user.id))
@@ -185,6 +190,6 @@ def rm_audio_select(m: types.Message) -> None:
 while True:
     try:
         tts.bot.polling(none_stop=True)
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError as requests_exc:
         Constants.STA_LOG.logger.exception(Constants.ExceptionMessages.UNEXPECTED_ERROR, exc_info=True)
         time.sleep(10)
