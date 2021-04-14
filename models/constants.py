@@ -29,6 +29,7 @@ class Constants(LiteralConstants):
         DB_AUDIO_INSERT: str = """INSERT INTO Own_Audios(file_id, id, description, duration, size, user_audio_id, callback_code) VALUES ('%s', '%s', '%s', '%i', '%i', '%i', '%s')"""
         DB_AUDIO_UPDATE_FOR_CHOSEN_RESULT: str = """UPDATE Own_Audios SET `times_used` = '%i' WHERE file_id = '%s'"""
         DB_AUDIO_REMOVE: str = """DELETE FROM Own_Audios WHERE id = '%s' AND description = '%s'"""
+        DB_ALL_AUDIO_REMOVE: str = """DELETE FROM Own_Audios WHERE id = '%s'"""
         """ Table Lan_Results """
         DB_LAN_READ: str = """SELECT `""" + """`, `""".join(LiteralConstants.SORTED_LANGUAGES.values()) \
                            + """` FROM Lan_Results WHERE id = '%s'"""
