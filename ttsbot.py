@@ -1,20 +1,19 @@
 # !/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import subprocess
 import os
 import telebot
 import requests
 import time
+import magic
 from telebot import types
-from typing import List, Callable, Dict
+from typing import List, Callable, Dict, Optional
 from collections import OrderedDict
+from pydub import AudioSegment
+from io import BytesIO
 from models.constants import Constants
 from models.utils import Utils
 from models.fileProcessing import FileProcessing
-
-
-my_bot = telebot.TeleBot(Constants.TOKEN)
 
 
 class Text_To_Speech_Bot(Utils):
@@ -40,28 +39,36 @@ class Text_To_Speech_Bot(Utils):
         reply = self.bot.reply_to(input_message, text_to_send, reply_markup=types.ForceReply(selective=False))
         self.bot.register_next_step_handler(reply, function)
 
-    def convert_audio_to_voice(self, desc_msg: types.Message, file_msg: types.Message) -> types.Message:
-        file_link = file_msg.audio
-        downloaded_file = self.bot.download_file(self.bot.get_file(file_link.file_id).file_path)
-
-        if file_msg.audio.mime_type == 'audio/mpeg' or 'audio/mp3':
-            filename = Constants.FilePath.AUDIOS + str(file_link.file_id)
-            audio_file = FileProcessing(filename, Constants.FileType.BYTES)
-            is_file_saved = audio_file.write_file(downloaded_file)
-            if not is_file_saved:
-                self.next_step(desc_msg, "Error writing audio. Send it again.", add_audio_file)
-
-            self.bot.send_message(6216877, "Pasando a ogg")
-            subprocess.call('bash mp3_to_ogg.sh ' + filename, shell=True)
-            new_msg = self.bot.send_voice(6216877, audio_file.read_file())
-            os.remove(filename)
+    def convert_to_voice(self, desc_msg: types.Message, file_msg: types.Message) -> Optional[types.Message]:
+        if file_msg.content_type == 'audio':
+            file_link = file_msg.audio
+        elif file_msg.content_type == 'video':
+            file_link = file_msg.video
         else:
-            #self.bot.send_message(6216877, "Unknown format")
-            new_msg = self.bot.send_voice(6216877, downloaded_file)
-        self.next_step_focused[str(desc_msg.from_user.id)] = file_msg = new_msg
-        return file_msg
+            file_link = file_msg.document
+
+        downloaded_file = self.bot.download_file(self.bot.get_file(file_link.file_id).file_path)
+        filename = Constants.FilePath.AUDIOS + str(file_link.file_id)
+        self.bot.send_message(file_msg.from_user.id, "Parsing file to telegram voice format")
+        try:
+            song = AudioSegment.from_file(BytesIO(downloaded_file))
+            song.export(filename, format="ogg", codec="libvorbis")
+        except:
+            mimetype = magic.from_file(filename, mime=True)
+            Constants.STA_LOG.logger.exception(Constants.ExceptionMessages.AUDIO_ERROR % mimetype, exc_info=True)
+            self.bot.send_message(6216877, 'Error trying to parse file with mimetype %s.' % mimetype)
+            self.bot.reply_to(file_msg, "Unknown file format %s. Please, send another media file." % mimetype)
+            return None
+        else:
+            voice = FileProcessing(filename, Constants.FileType.BYTES).read_file()
+            new_msg = self.bot.send_voice(file_msg.from_user.id, voice)
+            self.next_step_focused[str(desc_msg.from_user.id)] = file_msg = new_msg
+            return file_msg
+        finally:
+            os.remove(filename)
 
 
+my_bot = telebot.TeleBot(Constants.TOKEN)
 tts = Text_To_Speech_Bot(my_bot)
 
 
@@ -116,7 +123,7 @@ def add_audio_start(m: types.Message) -> None:
 
 
 def add_audio_file(m: types.Message) -> None:
-    if m.content_type == 'audio' or m.content_type == 'voice':
+    if tts.is_file_media(m):
         tts.next_step_focused[str(m.from_user.id)] = m
         tts.next_step(m, Constants.BotAnswers.PROVIDE_DESC, add_audio_description)
     else:
@@ -130,9 +137,10 @@ def add_audio_description(m: types.Message) -> None:
         result = db_conn.read_one(Constants.DBStatements.DB_AUDIO_READ_FOR_CHECKING % (str(m.from_user.id), description))
         if result is None:
             file_message = tts.next_step_focused[str(m.from_user.id)]
-            # tts.bot.send_message(6216877, str(file_message))
-            if file_message.content_type == 'audio':
-                file_message = tts.convert_audio_to_voice(m, file_message)
+            if tts.should_convert_to_voice(file_message):
+                file_message = tts.convert_to_voice(m, file_message)
+                if not file_message:
+                    return
 
             file_link = file_message.voice
             dbreturn = db_conn.read_all(Constants.DBStatements.DB_AUDIO_READ_USER_IDS % str(m.from_user.id))
@@ -146,7 +154,7 @@ def add_audio_description(m: types.Message) -> None:
                                                                         description, file_link.duration,
                                                                         file_link.file_size, user_audio_id,
                                                                         callback_code))
-            tts.bot.reply_to(m, Constants.BotAnswers.SAVED % description)
+            tts.bot.reply_to(file_message, Constants.BotAnswers.SAVED % description)
         else:
             tts.next_step(m, Constants.BotAnswers.USED_DESC, add_audio_description)
     else:
@@ -185,6 +193,24 @@ def rm_audio_select(m: types.Message) -> None:
             tts.bot.reply_to(m, Constants.BotAnswers.RM_USED_DESC)
     else:
         tts.bot.reply_to(m, Constants.BotAnswers.RM_DESC_NOT_TEXT)
+
+
+@my_bot.message_handler(commands=[Constants.BotCommands.RM_ALL_AUDIOS])
+def rm_all_audios(m: types.Message) -> None:
+    list_own_audio(m)
+    db_conn = tts.create_db_conn()
+    result = db_conn.read_one(Constants.DBStatements.DB_AUDIOS_READ_FOR_REMOVING % str(m.from_user.id))
+    if result is not None:
+        tts.next_step(m, Constants.BotAnswers.RM_ALL_AUDIO, confirm_rm_all_audios)
+
+
+def confirm_rm_all_audios(m: types.Message) -> None:
+    if m.text and m.text == 'CONFIRM':
+        db_conn = tts.create_db_conn()
+        db_conn.write_all(Constants.DBStatements.DB_ALL_AUDIO_REMOVE % str(m.from_user.id))
+        tts.bot.reply_to(m, Constants.BotAnswers.DELETED_ALL_AUDIO)
+    else:
+        tts.bot.reply_to(m, Constants.BotAnswers.RM_ALL_NOT_CONFIRM)
 
 
 while True:

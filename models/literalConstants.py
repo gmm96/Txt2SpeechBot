@@ -4,7 +4,7 @@
 import enum
 from collections import OrderedDict
 from operator import itemgetter
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 from models.logger import Logger
 
 
@@ -24,6 +24,7 @@ class LiteralConstants:
         ADD_AUDIO: str = "addaudio"
         LST_AUDIO: str = "listaudio"
         RM_AUDIO: str = "rmaudio"
+        RM_ALL_AUDIOS: str = "rmallaudios"
 
     class BotAnswers:
         SEND_AUDIO: str = "Send audio or voice note."
@@ -35,9 +36,12 @@ class LiteralConstants:
         SAVED: str = "Saved audio with description: \"%s\""
         LST_NONE_AUDIO: str = "Sorry, you don't have any uploaded audio... Try to upload one with /addaudio command."
         RM_AUDIO: str = "Send the description of the audio you want to remove."
+        RM_ALL_AUDIO: str = "Are you completely sure you want to delete all your audios? Answer 'CONFIRM' in uppercase to verify this action."
+        RM_ALL_NOT_CONFIRM: str = "You should have answered 'CONFIRM' to validate the deletion. Canceling action."
         RM_DESC_NOT_TEXT: str = "Wrong input. Send the description of the audio you want to remove. Try again /rmaudio."
         RM_USED_DESC: str = "No audio with the provided description. Please, send the correct description. Try again /rmaudio."
         DELETED_AUDIO: str = "The file was deleted from your audios."
+        DELETED_ALL_AUDIO: str = "All your audios were deleted successfully."
 
     class FilePath:
         TOKEN: str = "data/token.txt"
@@ -57,6 +61,7 @@ class LiteralConstants:
         DB_WRITE: str = "DB | Unable to write data in database\nSQL query: "
         FILE_CANT_OPEN: str = "File | Unable to open requested file\n"
         FILE_CANT_WRITE: str = "File | Unable to write provided data in this file\n"
+        AUDIO_ERROR: str = "AUDIO | Unable to open file with mimetype %s\n"
         UNEXPECTED_ERROR: str = "Error | An unexpected error has occured\n"
 
     STA_LOG: Logger = Logger("Status log", FilePath.STA_LOG)
@@ -108,3 +113,5 @@ class LiteralConstants:
         ";": "",
         "/": ""
     }  # ? : @ = &
+
+    CONTENT_TYPE: List[str] = ['audio', 'voice', 'video']
