@@ -1,24 +1,37 @@
 # !/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+"""
+File containing LiteralConstants class.
+"""
+
 import enum
 from collections import OrderedDict
 from operator import itemgetter
-from typing import Dict, List, Tuple
-from models.logger import Logger
+from typing import Dict, List
+from helpers.logger import Logger
 
 
 class LiteralConstants:
+    """
+    Basic constants for the working of the project.
+
+    All these constants are written in this python file shared across the project.
+    """
+
     class FileType(enum.Enum):
+        """ Enumerable with different file types that can be handled by the project. """
         REG = 1
         JSON = 2
         BYTES = 3
 
     class ChatType:
+        """ Supported telegram chat types by the bot. """
         PRIVATE: str = "private"
         GROUP: str = "group"
 
     class BotCommands:
+        """ Available commands for Txt2SpeechBot. """
         HELP: str = "help"
         START: str = "start"
         ADD_AUDIO: str = "addaudio"
@@ -27,6 +40,7 @@ class LiteralConstants:
         RM_ALL_AUDIOS: str = "rmallaudios"
 
     class BotAnswers:
+        """ Bot answers to user interaction. """
         SEND_AUDIO: str = "Send audio or voice note."
         MAX_OWN_AUDIOS: str = "Sorry, you reached maximun number of stored audios (50). Try removing some of them with /rmaudio command."
         PROVIDE_DESC: str = "Saved!\n\nProvide now a short description for the audio. 30 character allowed."
@@ -44,6 +58,7 @@ class LiteralConstants:
         DELETED_ALL_AUDIO: str = "All your audios were deleted successfully."
 
     class FilePath:
+        """ File path to required project files. """
         TOKEN: str = "data/token.txt"
         DB: str = "data/db.json"
         TTS: str = "data/magic.txt"
@@ -51,9 +66,9 @@ class LiteralConstants:
         STA_LOG: str = "data/status.log"
         MSG_LOG: str = "data/messages.log"
         QRY_LOG: str = "data/queries.log"
-        AUDIOS: str = "audios/"
 
     class ExceptionMessages:
+        """ Messages to be sent when a exception occurs. """
         DB_CONNECTED: str = "DB | Connected to MySQL database server, version "
         DB_UNCONNECTED: str = "DB | Error while trying to connect to MySQL database server\nError: "
         DB_DISCONNECTED: str = "DB | Disconnected from MySQL database server"
@@ -82,13 +97,13 @@ class LiteralConstants:
         "Português PT": "Pt-pt",
         "ελληνικά GR": "El-gr",
         "русский RU": "Ru-ru",
-        "Türk TR": "Tr-tr",
-        "中国 ZH": "Zh-cn",
-        "日本の JA": "Ja",
+        "Türkçe TR": "Tr-tr",
+        "汉语 ZH": "Zh-cn",
+        "日本語 JA": "Ja",
         "Polski PL": "Pl"
     }
-    __sortedLAN: List[Tuple[str, str]] = sorted(LANGUAGES.items(), key=itemgetter(0))
-    SORTED_LANGUAGES: OrderedDict = OrderedDict(__sortedLAN)
+    # noinspection PyTypeChecker
+    SORTED_LANGUAGES: OrderedDict = OrderedDict(sorted(LANGUAGES.items(), key=itemgetter(0)))
 
     PROBLEMATIC_CHARS: Dict[str, str] = {
         "\n": " ",
@@ -114,4 +129,5 @@ class LiteralConstants:
         "/": ""
     }  # ? : @ = &
 
-    CONTENT_TYPE: List[str] = ['audio', 'voice', 'video']
+    CONTENT_TYPES: List[str] = ['audio', 'voice', 'video']
+    MIME_TYPES: List[str] = ['audio', 'video']
