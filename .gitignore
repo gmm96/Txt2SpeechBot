@@ -4,8 +4,7 @@
 *.txt
 data/
 analyze/
-tests/
-models/__pycache__/
+bin/
 .idea/
 .handler-saves/
 notify_failure.sh
